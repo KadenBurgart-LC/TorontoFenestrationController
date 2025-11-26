@@ -1,0 +1,7 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<IconProject Version="2.0" Name="Pause" PUAEnable="true" BasicLatinEnable="false">
+  <Icon Name="Media Pause" HasCharacterMap="false" Data="M18.51899,0L29.981999,0 29.981999,32 18.51899,32z M0,0L11.464992,0 11.464992,32 0,32z" Location="Application" IsDirty="false" FontName="Media Pause" IsDuplicate="false" ASCIIValue="" AlphaNumericValue="" FiValue="" GroupName="Application" DataFont="M612.8,2.5L971,2.5 971,1002.5 612.8,1002.5 612.8,2.5z M34,2.5L392.3,2.5 392.3,1002.5 34,1002.5 34,2.5z" ExportCommand="MetroGraphicsPackage.IconCommand">
+    <Settings MainWidth="48" MainHeight="48" FlipX="1" FlipY="1" CustomSize="48" IconShape="None" BackgroundBrush="#FFAEAEAE" ContentWidth="48" ContentHeight="48" Angle="0" IsRect="false" SizeIndex="4" CustomWidth="48" CustomHeight="48" IsLinked="false" Padding="0" MaximumPadding="15" SldierValueChanged="MetroGraphicsPackage.IconCommand" IconBrush="#FF262626" FontFamily="Webdings" Character="&gt;" FlipCommand="MetroGraphicsPackage.IconCommand" IsBackgroundVisible="true" />
+  </Icon>
+  <PreferenceInfo ClassPrefix="sf-icon-" ClassPostfix="" CSSSelector="Attribute" CSSClassName="sf-icon" />
+</IconProject>

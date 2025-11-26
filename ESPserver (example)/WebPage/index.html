@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<meta charset="utf-8">  
+<html>
+  <head>
+    <title>Fenestration Test Panel</title>
+    <script src="https://d3js.org/d3.v4.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style type="text/css">
+      * {
+        font-family: helvetica;
+      }
+
+      div {
+        border-style: solid;
+        border-width: 1px;
+      }
+
+      #pageContainer {
+        display: grid;
+        grid-template-columns: 100px minmax(800px, auto) 100px;
+      }
+
+      #mainGrid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto;
+
+        grid-column: 2 / 3;
+      }
+
+      #LiveGraph {
+        grid-column: 1 / 3;
+
+        padding: 20px;
+      }
+
+      .titleBlock {
+        grid-column: 1 / 3;
+        font-size: 2em;
+        padding: 15px;
+      }
+
+      .widget {
+        padding: 10px;
+      }
+      .widget .label {
+        padding: 9px 0 0 5px;
+      }
+      .widget .grid {
+        display:grid; 
+        grid-template-columns: 35px 110px 1fr;
+      }
+
+      .widget .send-grid {
+        display:grid; 
+        grid-template-columns: 35px 110px 35px 1fr;
+      }
+      .widget .indicator-grid {
+        display:grid; 
+        grid-template-columns: 35px 35px 1fr;
+      }
+
+      .refresh > img {
+        margin: 5px 0 0 5px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .send > img {
+        margin: 5px 0 0 5px;
+        width: 24px;
+        height: 24px;
+      }
+
+      .textField > input {
+        margin: 2px;
+        width: 102px;
+        height: 28px;
+        border: none;
+
+        font-size: 1.2em;
+        text-align:center; 
+      }
+
+      .toggle {
+        height: 35px;
+        padding-left: 10px;
+      }
+      .toggle center {
+        position:relative;
+      }
+      .toggle .sit {
+        background-color: #999; 
+        position: absolute; 
+        top: 8px; 
+        left: 25px; 
+        height: 18px; 
+        width: 45px;
+        border-radius: 3px;
+      }
+      .toggle .slide {
+        background-color: #DDD; 
+        position: absolute; 
+        top: 5px; 
+        left: 15px; 
+        height: 24px; 
+        width: 25px;
+        border-radius: 5px;
+        background-image: url('../assets/slide.png');
+        background-size: 16px;
+        background-repeat: no-repeat;
+        background-position: center;
+      }
+
+      .indicator {
+        position: relative;
+      }
+
+      .indicator > img {
+        position: absolute;
+        margin: 5px 0 0 5px;
+        width: 24px;
+        height: 24px;
+      }
+
+    </style>
+
+  </head>
+
+  <body>
+
+    <div id="pageContainer">
+      <div id="mainGrid">
+        <div class="titleBlock"><center>Fenestration Test Panel - Control Console<center></div>      
+        <div class="widget" id="w1">
+          <div class="grid">
+            <div class="refresh"><img src="../assets/Refresh2.png" /></div>
+            <div class="toggle"><center><div class="sit"></div><div class="slide"></div></center></div>
+            <div class="label">Blower</div>
+          </div>
+        </div>      
+        <div class="widget" id="w4">
+          <div class="grid">
+            <div class="refresh"><img src="../assets/Refresh2.png"/></div>
+            <div class="textField"><input type="text" disabled="" /></div>
+            <div class="label">Blower Current</div>
+          </div>
+        </div>      
+        <div class="widget" id="w2">
+          <div class="grid">
+            <div class="refresh"><img src="../assets/Refresh2.png" /></div>
+            <div class="toggle"><center><div class="sit"></div><div class="slide"></div></center></div>
+            <div class="label">Negative Pressure</div>
+          </div>
+        </div>      
+        <div class="widget" id="w5">
+          <div class="grid">
+            <div class="refresh"><img src="../assets/Refresh2.png"/></div>
+            <div class="textField"><input type="text" disabled="" /></div>
+            <div class="label">Pressure Direction</div>
+          </div>
+        </div>
+        <div class="widget" id="w3">
+          <div class="send-grid">
+            <div class="refresh"><img src="../assets/Refresh2.png"/></div>
+            <div class="textField"><input type="text" /></div>
+            <div class="send"><img src="../assets/Send.png"/></div>
+            <div class="label">Target Pressure (kPa)</div>
+          </div>
+        </div>
+        <div class="widget" id="w6">
+          <div class="grid">
+            <div class="refresh"><img src="../assets/Refresh2.png"/></div>
+            <div class="textField"><input type="text" disabled="" /></div>
+            <div class="label">Current Pressure</div>
+          </div>
+        </div>
+        <div id="LiveGraph"></div>
+        <div class="widget" id="w11">
+          <div class="grid">
+            <div class="refresh"><img src="../assets/Refresh2.png" /></div>
+            <div class="toggle"><center><div class="sit"></div><div class="slide"></div></center></div>
+            <div class="label">Water Pump</div>
+          </div>
+        </div>
+        <div class="widget">Pump Timer Widget</div>
+        <div class="widget" id="w12">
+          <div class="grid">
+            <div class="refresh"><img src="../assets/Refresh2.png"/></div>
+            <div class="textField"><input type="text" disabled="" /></div>
+            <div class="label">Proportional Valve 1</div>
+          </div>
+        </div>
+        <div class="widget" id="w14">
+          <div class="indicator-grid">
+            <div class="refresh"><img src="../assets/Refresh2.png"/></div>
+            <div class="indicator"><img src="../assets/Warn.png"/></div>
+            <div class="label">Proportional Valve 1 Fault</div>
+          </div>
+        </div>
+        <div class="widget" id="w13">
+          <div class="grid">
+            <div class="refresh"><img src="../assets/Refresh2.png"/></div>
+            <div class="textField"><input type="text" disabled="" /></div>
+            <div class="label">Proportional Valve 2</div>
+          </div>
+        </div>
+        <div class="widget" id="w15">
+          <div class="indicator-grid">
+            <div class="refresh"><img src="../assets/Refresh2.png"/></div>
+            <div class="indicator"><img src="../assets/Warn.png"/></div>
+            <div class="label">Proportional Valve 2 Fault</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <script>
+
+/*  *****     *****     *****     *****  UI INTERAVTIVITY  *****     *****     *****     *****  */
+
+  var rootUrl = 'http://192.168.1.205';
+
+  var refreshHoverOn = function(){ $(this).attr("src", "../assets/Refresh2Hover.png"); };
+  var refreshHoverOff = function(){ $(this).attr("src", "../assets/Refresh2.png"); };
+
+  var refreshButtonLoadingMode = function(btnImg){
+    btnImg.unbind('mouseenter mouseleave');
+    btnImg.attr('src', '../assets/spinner.gif');
+  }
+
+  var refreshButtonReadyMode = function(btnImg){
+    btnImg.attr('src', '../assets/Refresh2.png');
+    btnImg.hover(refreshHoverOn, refreshHoverOff);
+  };
+
+  // TEXT FIELDS
+  $('.refresh>img').hover(refreshHoverOn, refreshHoverOff);
+
+  var textFieldRefreshHandler = function(refreshImg){
+        refreshButtonLoadingMode(refreshImg);
+
+        var w = refreshImg.closest('.widget');
+        var id = w.attr('id');
+        var textField = w.find('input');
+
+        $.get(rootUrl + '/get/' + id,
+          function(data){
+            textField.val(data);
+          }).done(function(){
+            refreshButtonReadyMode(refreshImg);
+          });
+    };
+
+  $('.textField').closest('.widget').find('.refresh>img').click(function(){ textFieldRefreshHandler($(this)); });
+
+  $('.send>img').hover(
+      function(){ $(this).attr("src", "../assets/Send2.png"); },
+      function(){ $(this).attr("src", "../assets/Send.png"); }
+    );
+  $('.send>img').click(function(){
+      var w = $(this).closest('.widget');
+      var id = w.attr('id');
+      var refreshImage = w.find('.refresh>img');
+      var textField = w.find('input');
+
+      refreshButtonLoadingMode(refreshImage);
+
+      $.post(rootUrl + '/set/' + id, { 'targetPressure': textField.val() })      
+        .done(function(data){
+          textField.val(data);
+          refreshButtonReadyMode();
+        });
+    });
+
+  // TOGGLE SWITCHES
+  var toggleClickHandler = function(toggle){
+      var slider = toggle.find(".slide");
+      var w = slider.closest(".widget");
+      var refreshImage = w.find('.refresh>img');
+      var id = w.attr('id');
+
+      refreshButtonLoadingMode(refreshImage);
+
+      // This function runs after the AJAX call completes
+      var callbackFunction = function() { 
+        refreshButtonReadyMode(refreshImage);
+
+        if(id == "w2") textFieldRefreshHandler($('#w5>div>div>img'));
+      };
+
+      // TURN ON 
+      if(slider.css("left") == "15px") { 
+        slider.animate({left: '35px'}, 150, function(){
+            $.post(rootUrl + '/set/' + id,
+                { setTo: 1 }
+              ).done(function(data){
+                if(data == "1") slider.animate({left: '55px'}, 150, callbackFunction);
+                else slider.animate({left: '15px'}, 150, callbackFunction);
+              });
+          });        
+      }
+      
+      // TURN OFF (if the slider is stuck somewhere, we will treat a click as a command to turn off)
+      else /*if($(this).find(".slide").css("left") == "55px")*/ { 
+        slider.animate({left: '35px'}, 150, function(){
+            $.post(rootUrl + '/set/' + slider.closest(".widget").attr('id'),
+                { setTo: 0 }
+              ).done(function(data){
+                if(data == "1") slider.animate({left: '55px'}, 150, callbackFunction);
+                else slider.animate({left: '15px'}, 150, callbackFunction);
+              });
+          });
+      }
+    };
+  $('.toggle').click(function() { toggleClickHandler($(this)); });
+
+  var toggleRefreshHandler = function(refreshImg){
+      refreshButtonLoadingMode(refreshImg);
+
+      var w = refreshImg.closest('.widget');
+      var id = w.attr('id');
+      var slide = w.find('.slide');
+
+      var callbackFunction = function() { 
+          refreshButtonReadyMode(refreshImg);
+        };
+
+      slide.animate({left: '35px'}, 150, function(){
+        $.get(rootUrl + '/get/' + id,
+          function(data){
+            if(data == "1") slide.animate({left: '55px'}, 150, callbackFunction);
+            else slide.animate({left: '15px'}, 150, callbackFunction);
+          });
+      });
+    };
+  $('.toggle').closest('.widget').find('.refresh>img').click(function(){ toggleRefreshHandler($(this)); });
+
+  // INDICATORS
+  var indicatorRefreshHandler = function(refreshImg){
+      refreshButtonLoadingMode(refreshImg);
+
+      var w = refreshImg.closest('.widget');
+      var id = w.attr('id');
+      var img = w.find('.indicator > img');
+      
+      $.get(rootUrl + '/get/' + id,
+          function(data){
+            if(data == "1") img.attr('src', '../assets/warnGif.gif');
+            else img.attr('src', '../assets/Warn.png');
+          }).done(function(){
+            refreshButtonReadyMode(refreshImg);
+          });
+    };
+  $('.indicator').closest('.widget').find('.refresh>img').click(function(){ indicatorRefreshHandler($(this)); });
+
+/*  *****     *****     *****     ***** /UI INTERAVTIVITY  *****     *****     *****     *****  */
+
+/*  *****     *****     *****     *****  LIVE GRAPH  *****     *****     *****     *****  */
+
+  var LiveGraph = {
+    init : function() {
+      // Create the main elements for the graph
+      graphSvg = d3.select("#LiveGraph").append("svg"); // Add an svg to the existing LiveGraph div
+      svgG = graphSvg.append("g"); // Adds a 'group' element to the svg; for the main container
+      xAxis = svgG.append('g'); // Adds a group for the x axis
+      pAxis = svgG.append('g'); // Adds a group for the pressure axis
+      dAxis = svgG.append('g'); // Adds a group for the deflection axis
+      pPath = svgG.append("path"); // Adds a path to the svg to display the pressure
+      d1Path = svgG.append('path'); // Adds a path to the svg to display the d1 data
+      d2Path = svgG.append('path'); // Adds a path to the svg to display the d2 data
+
+      // Initialize empty data arrays
+      this.pressureData = [];
+      this.d1Data = [];
+      this.d2Data = [];
+    }
+  };
+  LiveGraph.init();
+
+    // Define the function that will render and re-render the graph
+  LiveGraph.render = function(){
+      // Settings
+      var transitionDelay = 400;
+      var marginRatio = 0.1;
+
+      // Setting up the bounding box
+      var margin = {
+          top: 10,
+          right: 40,
+          bottom: 30,
+          left: 50
+        };
+      var width = $('#mainGrid').width() - 60 - margin.left - margin.right;
+      var height = 340 - margin.top - margin.bottom;
+
+      graphSvg
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom);
+      svgG.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+      // Reneder the time axis
+      var xMax = d3.max(this.pressureData, d => d[0]);
+      var xMin = d3.min(this.pressureData, d => d[0]);
+      var xRange = xMax - xMin;
+      var xScale = d3.scaleLinear()
+        .domain([xMin, xMax])
+        .range([0, width]);
+      xAxis
+        .transition()
+            .ease(d3.easeCubicOut)
+        .delay(transitionDelay)
+        .attr("transform", "translate(0," + height + ")")
+        .call(d3.axisBottom(xScale));
+
+      // Render the pressure axis
+      var pMax = d3.max(this.pressureData, d => d[1]);
+      var pMin = d3.min(this.pressureData, d => d[1]);
+      var pRange = pMax - pMin;
+      var pScale = d3.scaleLinear()
+        .domain([pMin - (pRange * marginRatio), pMax + (pRange * marginRatio)])
+        .range([height, 0]);
+      pAxis
+        .transition()
+            .ease(d3.easeCubicOut)
+        .delay(transitionDelay)
+        .call(d3.axisLeft(pScale));
+
+      // Render the deflection axis
+      var d1Max = d3.max(this.d1Data, d => d[1]);
+      var d1Min = d3.min(this.d1Data, d => d[1]);
+      var d2Max = d3.max(this.d2Data, d => d[1]);
+      var d2Min = d3.min(this.d2Data, d => d[1]);
+      var dMax = d1Max > d2Max ? d1Max : d2Max;
+      var dMin = d1Min < d2Min ? d1Min : d2Min;
+      var dRange = dMax - dMin;
+      var dScale = d3.scaleLinear()
+        .domain([dMin - (dRange * marginRatio), dMax + (dRange * marginRatio)])
+        .range([height, 0]);
+      dAxis
+        .transition()
+          .ease(d3.easeCubicOut)
+        .delay(transitionDelay)
+        .attr("transform", "translate("+width+",0)")
+        .call(d3.axisRight(dScale));
+
+      // Render the data paths
+      const  line = d3.line().x(d => xScale(d[0])).y(d => pScale(d[1]));
+      const dline = d3.line().x(d => xScale(d[0])).y(d => dScale(d[1]));
+
+      pPath.data([this.pressureData])
+          .transition()
+            .ease(d3.easeCubicOut)
+            .delay(transitionDelay)
+        .attr("d", line)
+        .style("fill", "none")
+        .style("stroke", "steelblue")
+        .style("stroke-width", "3px");
+
+      d1Path.data([this.d1Data])
+        .transition()
+          .ease(d3.easeCubicOut)
+          .delay(transitionDelay)
+        .attr('d', dline)
+        .style("fill", "none")
+        .style("stroke", "#AA2222")
+        .style("stroke-width", "3px");
+
+      d2Path.data([this.d2Data])
+        .transition()
+          .ease(d3.easeCubicOut)
+          .delay(transitionDelay)
+        .attr('d', dline)
+        .style("fill", "none")
+        .style("stroke", "#AA2222")
+        .style("stroke-width", "3px");
+    }
+  
+  LiveGraph.render();
+
+  $(window).resize(() => LiveGraph.render() );
+
+  /*  *****     *****     *****     ***** /LIVE GRAPH  *****     *****     *****     *****  */
+
+  /*  *****     *****     *****     *****  PAGE UPDATE INTERVALS  *****     *****     *****     *****  */
+
+  var pressureUpdter = function(){
+    var refreshImage = $('#w6').find('img');
+    refreshImage.unbind('mouseenter mouseleave');
+    refreshImage.attr('src', '../assets/spinner.gif');
+
+    $.get(rootUrl + '/get/pressure',
+        function(data){
+          var dataObj = JSON.parse(data);
+
+          $('#w6').find('input').val(dataObj.pressure);
+
+          
+          LiveGraph.pressureData.push([+dataObj.millis, +dataObj.pressure]);
+          LiveGraph.d1Data.push([+dataObj.millis, (+dataObj.pressure)/5-5]);
+          LiveGraph.d2Data.push([+dataObj.millis, (+dataObj.pressure)/6]);
+
+          if(LiveGraph.pressureData.length >= 50) LiveGraph.pressureData.shift();
+          if(LiveGraph.d1Data.length >= 50) LiveGraph.d1Data.shift();
+          if(LiveGraph.d2Data.length >= 50) LiveGraph.d2Data.shift();
+
+          LiveGraph.render();
+
+        }).done(function(){
+          refreshImage.attr('src', '../assets/Refresh2.png'); 
+          refreshImage.hover(refreshHoverOn, refreshHoverOff);
+        });
+  };
+
+  var puI = setInterval(pressureUpdter, 500);
+
+/*  *****     *****     *****     ***** /PAGE UPDATE INTERVALS  *****     *****     *****     *****  */
+
+  </script>
+</html>
