@@ -1,4 +1,4 @@
-#Toronto Fenestration Controller Code
+# Toronto Fenestration Controller Code
 This repository contains the code to run a P1AM-200 controller from AutomationDirect.com, which is the 'main brain' in the electrical control cabinet for an NAFS window testing wall.
 
 The window testing wall simulates wind and rain conditions to evaluate windows for certification in North America. Windows are mounted against the wall, and the cavity between the window and wall is pressurized to various levels, and measured in various ways to qualify a particular assembly from the window product line for certification.
