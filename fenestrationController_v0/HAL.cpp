@@ -5,6 +5,7 @@
 #include <P1AM.h>      // The public library for the AutomationDirect controller we are using
 #include <Arduino.h>     
 #include <Adafruit_NeoPixel.h>
+#include <SD.h>
 
 // Private members
 namespace {
@@ -77,9 +78,21 @@ namespace HAL {
 		// Start the driver for the RGB LED on the CPU
 		C0_1_RgbLed.begin();
 
-		// Turn the RGB LED green
-		// Note: The LED is very bright. No need to blind yourself. Turn it up to 255 if you are really mad at the Toronto people.
+		/* Turn the RGB LED green
+		   Note: The LED is very bright. No need to blind yourself. Turn it up to 255 if you are really mad at the Toronto people. */
 		set_C0_1_RgbLed(1, 4, 0);
+
+		/* Initialize the SD card module within the CPU.
+		   The documentation for the P1AM-200 says that the chip select pin is stored in SDCARD_SS_PIN */	
+		if(!SD.begin(SDCARD_SS_PIN)){
+			Serial.println("Failed to initialize the SD card, which hosts the web app and logs data. Things to check...");
+			Serial.println("  1. is the SD card inserted?");
+			Serial.println("  2. is the SD card broken or full?");
+			Serial.println("  3. is the SD card formatted with a FAT32 partition?");
+		}
+		else {
+			Serial.println("SD card initialized.");
+		}
 	}
 
 	void init_Serial(){
@@ -92,8 +105,51 @@ namespace HAL {
 		P1.configureModule(P1_08ADL_2_CONFIG, 3); //sends the config data to the analog voltage input module in slot 3
 	}
 
+	// Set the colour of the RGB LED on the controller
+	// WARNING: The LED is very bright. You probably don't want to turn it up higher than 10/255.
 	void set_C0_1_RgbLed(uint8_t R, uint8_t G, uint8_t B){
 		C0_1_RgbLed.setPixelColor(0, R, G, B);
 		C0_1_RgbLed.show();
+	}
+
+	/* Print out all entries in a particular directory on the SD card.
+	   This function takes in any stream, so we can use the Serial interface or the web client. */
+	void SD_PrintDirectory(Stream& printer, char* dir){
+		File dirf = SD.open(dir);
+
+		printer.print("Listing the contents of directory \"");
+		printer.print(dir);
+		printer.print("\"\n");
+
+		while(true){
+			File entry = dirf.openNextFile();
+			if(!entry) break;
+
+			printer.print("\t");
+			printer.print(entry.name());
+
+			if(entry.isDirectory()) printer.println("/");
+			else {
+				printer.print("\t\t");
+				printer.println(entry.size(), DEC);
+			}
+			entry.close();
+		}
+	}
+
+	/* Print out the contents of a particular file on the SD card.
+	   This function takes in any stream, so we can use the Serial interface or the web client. */
+	void SD_PrintFileContents(Stream& printer, char* filePath){
+		File sdFile = SD.open(filePath);
+
+		if(sdFile){
+			while(sdFile.available()) printer.write(sdFile.read());
+			sdFile.close();
+		}
+		else {
+			printer.print("Failed to open file \"");
+			printer.print(filePath);
+			printer.print("\"\nAre you sure this file exists?");
+		}
 	}
 }

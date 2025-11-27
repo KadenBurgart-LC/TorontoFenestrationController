@@ -15,6 +15,7 @@ When including other files, please explain what they are and what they do.
 #define HAL_H          
 
 #include <stdint.h>
+#include <Stream.h>
 
 namespace HAL {
 	enum class DigitalOutput {
@@ -54,7 +55,17 @@ namespace HAL {
 	void init_Serial();
 	void init_P1Slots();
 
+	// Set the colour of the RGB LED on the controller
+	// WARNING: The LED is very bright. You probably don't want to turn it up higher than 10/255.
 	void set_C0_1_RgbLed(uint8_t R, uint8_t G, uint8_t B);
+
+	/* Print out all entries in a particular directory on the SD card.
+       This function takes in any stream, so we can use the Serial interface or the web client. */
+	void SD_PrintDirectory(Stream& printer, char* dir);
+
+	/* Print out the contents of a particular file on the SD card.
+       This function takes in any stream, so we can use the Serial interface or the web client. */
+	void SD_PrintFileContents(Stream& printer, char* filePath); 
 }
 
 #endif

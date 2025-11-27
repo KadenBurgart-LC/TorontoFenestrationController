@@ -120,6 +120,16 @@ namespace {
 
     HAL::set_C0_1_RgbLed(R, G, B);
   }
+
+  // List files in a directory on the SD card
+  void c_SD_ls(){
+    HAL::SD_PrintDirectory(Serial, console->Arguments[1]);
+  }
+
+  // Dump the contents of a file from the SD card into the Serial interface
+  void c_SD_cat(){
+    HAL::SD_PrintFileContents(Serial, console->Arguments[1]);
+  }
 }
 
 namespace th_SerialConsole{
@@ -156,6 +166,14 @@ namespace th_SerialConsole{
     console->Triggers[5] = "led";
     console->Functions[5] = c_LED;
     console->HelpMsg[5] = "Change the setting on the RGB LED on the CPU.\nEach color has a min of 0 and a max of 255.\nled <R> <G> <B>";
+  
+    console->Triggers[6] = "sdls";
+    console->Functions[6] = c_SD_ls;
+    console->HelpMsg[6] = "List the contents of a directory on the SD card (root is \"/\").\nsdls <dir>";
+    
+    console->Triggers[7] = "sdcat";
+    console->Functions[7] = c_SD_cat;
+    console->HelpMsg[7] = "Dump the contents of a file from the SD card.\nsdcat <filePath>";
   }
 
   void tick(){

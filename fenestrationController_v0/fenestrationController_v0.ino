@@ -12,9 +12,9 @@
     S0900.A.D.1 and the system diagrams in S0900.A.D.2.
 
     This program hosts a webserver that is intended to pair with a specific web application.
-    The user interface is all in the web application, which is currently kept in a seperate file.
-    This program does not currently send the web app to clients; they need to have it already.
-    To run the user interface for this program, you need to open that index.html file on a PC.
+    The user interface is all in the web application, which I am working on putting on an SD
+    card that lives in the P1AM-200 module. I'll make a server interface to upload and download
+    files to/from the SD card for over-the-air updates to the web app.
 
     Planning...
       What core processes do I need to run the wall?
@@ -81,7 +81,7 @@
 #define PROGRAM_VERSION "v0.1 - DRAFT"
 #define PROGRAM_VERSION_DATE "2025-11-24"
 #define PROGRAM_NAME "fenestrationController"
-#define PROGRAM_STAMP PROGRAM_NAME "_" PROGRAM_VERSION " (" PROGRAM_VERSION_DATE ")\nBuild date: " __DATE__ " " __TIME__
+#define PROGRAM_STAMP "\n\n" PROGRAM_NAME "_" PROGRAM_VERSION " (" PROGRAM_VERSION_DATE ")\nBuild date: " __DATE__ " " __TIME__ "\n"
 
 // Help us keep track of what threads we are running
 #define T_BLINK_TEST 0
@@ -93,6 +93,8 @@ OSBos* kernel;
 
 void setup() {
   HAL::init_Serial();
+  Serial.println(PROGRAM_STAMP);  
+
   HAL::init_CPU();
   HAL::init_P1Slots();
 
@@ -113,8 +115,6 @@ void setup() {
   kernel->Threads[T_WEBSVR]->RootMethod = th_WebServer::tick;
   kernel->Threads[T_WEBSVR]->Active = true;
   kernel->Threads[T_WEBSVR]->ReadyPeriod_ms = 500;
-
-  Serial.println(PROGRAM_STAMP);  
 }
 
 void loop() {
