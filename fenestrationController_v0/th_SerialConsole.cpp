@@ -1,17 +1,28 @@
 #include "th_SerialConsole.h"
 
 #include "HAL.h"
-#include "lib_SerialConsole.h"
+#include <SerialConsole.h>
 #include <P1AM.h>      // The public library for the AutomationDirect controller we are using
 
 // Private members
 namespace {
-  SerialConsole* console = nullptr;
+  SerialConsoleConfig setupConsoleConfig(){
+    SerialConsoleConfig config;
+
+    config.numCommands = 15;
+    config.maxFullLineLength = 100;
+    config.maxArgLength = 80;
+
+    return config;
+  }
+
+  SerialConsoleConfig ConsoleConfig = setupConsoleConfig();
+  SerialConsole console(ConsoleConfig);
 
   void c_DiscreteOutput(){
-    uint8_t slot    = strtol(console->Arguments[1], NULL, 10);
-    uint8_t channel = strtol(console->Arguments[2], NULL, 10);
-    uint8_t state   = strtol(console->Arguments[3], NULL, 10);
+    uint8_t slot    = strtol(console.Arguments[1], NULL, 10);
+    uint8_t channel = strtol(console.Arguments[2], NULL, 10);
+    uint8_t state   = strtol(console.Arguments[3], NULL, 10);
 
     Serial.print("Attempting to write ");
     Serial.print(state);
@@ -38,8 +49,8 @@ namespace {
   }
 
   void c_AnalogInput(){
-    uint8_t slot    = strtol(console->Arguments[1], NULL, 10);
-    uint8_t channel = strtol(console->Arguments[2], NULL, 10);
+    uint8_t slot    = strtol(console.Arguments[1], NULL, 10);
+    uint8_t channel = strtol(console.Arguments[2], NULL, 10);
 
     int inputCounts = 0;
     float inputVolts = 0;
@@ -67,7 +78,7 @@ namespace {
   }
 
   void c_P1StatusCodes(){
-    uint8_t slot    = strtol(console->Arguments[1], NULL, 10);
+    uint8_t slot    = strtol(console.Arguments[1], NULL, 10);
 
     char statusCodeBuffer[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
     char configCodeBuffer[2] = {0,0};
@@ -114,69 +125,65 @@ namespace {
   }
 
   void c_LED(){
-    uint8_t R = strtol(console->Arguments[1], NULL, 10);
-    uint8_t G = strtol(console->Arguments[2], NULL, 10);
-    uint8_t B = strtol(console->Arguments[3], NULL, 10);
+    uint8_t R = strtol(console.Arguments[1], NULL, 10);
+    uint8_t G = strtol(console.Arguments[2], NULL, 10);
+    uint8_t B = strtol(console.Arguments[3], NULL, 10);
 
     HAL::set_C0_1_RgbLed(R, G, B);
   }
 
   // List files in a directory on the SD card
   void c_SD_ls(){
-    HAL::SD_PrintDirectory(Serial, console->Arguments[1]);
+    HAL::SD_PrintDirectory(Serial, console.Arguments[1]);
   }
 
   // Dump the contents of a file from the SD card into the Serial interface
   void c_SD_cat(){
-    HAL::SD_PrintFileContents(Serial, console->Arguments[1]);
+    bool success = HAL::SD_PrintFileContents(Serial, console.Arguments[1]);
+
+    if(!success) Serial.println("Failed to find and print the file.");
+  }
+
+  // Write an argument into a file on the SD card (overwriting any existing file)
+  void c_SD_write(){
+    bool success = HAL::SD_WriteFile(console.Arguments[2], console.Arguments[1]);
+
+    if(success) Serial.println("File created.");
+    else Serial.println("Failed to write the file.");
+  }
+
+  // Delete a file from the SD card
+  void c_SD_rm(){
+    bool success = HAL::SD_DeleteFile(console.Arguments[1]);
+
+    if(success) Serial.println("File deleted.");
+    else Serial.println("Deletion failed.");
+  }
+
+  void c_SD_append(){
+    bool success = HAL::SD_AppendFile(console.Arguments[2], console.Arguments[1]);
+
+    if(success) Serial.println("Data appended successfully.");
+    else Serial.println("Failed to append data.");
   }
 }
 
 namespace th_SerialConsole{
   void initialize(){
-    // set up the serial console
-    console = new SerialConsole(
-        15, // number of commands
-        50, // maximum character count of any full command line (with arguments)
-        15, // maximum character count of any command
-        10, // maximum character count of any single argument
-        5,  // maximum number of arguments allowed in a single command line
-        1   // the scan period (set to 1ms to let OSBos control this)
-      );
-
-    strcpy(console->Triggers[0], "test");
-    console->Functions[0] = c_Test;
-
-    strcpy(console->Triggers[1], "do");
-    console->Functions[1] = c_DiscreteOutput;
-    console->HelpMsg[1] = "Digital Output command.\nTurn a digital output on or off.\ndo <slot> <channel> <state>";
-
-    strcpy(console->Triggers[2], "ai");
-    console->Functions[2] = c_AnalogInput;
-    console->HelpMsg[2] = "Analog Input command.\nRead an analog input.\nai <slot> <channel>";
-
-    strcpy(console->Triggers[3], "pm");
-    console->Functions[3] = []() { P1.printModules(); };
-    console->HelpMsg[3] = "Print out all installed P1 modules.";
-
-    console->Triggers[4] = "p1s";
-    console->Functions[4] = c_P1StatusCodes;
-    console->HelpMsg[4] = "Check the status codes on the P1 modules.\np1s <slot>";
-
-    console->Triggers[5] = "led";
-    console->Functions[5] = c_LED;
-    console->HelpMsg[5] = "Change the setting on the RGB LED on the CPU.\nEach color has a min of 0 and a max of 255.\nled <R> <G> <B>";
-  
-    console->Triggers[6] = "sdls";
-    console->Functions[6] = c_SD_ls;
-    console->HelpMsg[6] = "List the contents of a directory on the SD card (root is \"/\").\nsdls <dir>";
-    
-    console->Triggers[7] = "sdcat";
-    console->Functions[7] = c_SD_cat;
-    console->HelpMsg[7] = "Dump the contents of a file from the SD card.\nsdcat <filePath>";
+    console.AddCommand("test", c_Test);
+    console.AddCommand("do", c_DiscreteOutput, "Digital Output command.\nTurn a digital output on or off.\ndo <slot> <channel> <state>");
+    console.AddCommand("ai", c_AnalogInput, "Analog Input command.\nRead an analog input.\nai <slot> <channel>");
+    console.AddCommand("pm", []() { P1.printModules();}, "Print out all installed P1 modules.");
+    console.AddCommand("p1s", c_P1StatusCodes, "Check the status codes on the P1 modules.\np1s <slot>");
+    console.AddCommand("led", c_LED, "Change the setting on the RGB LED on the CPU.\nEach color has a min of 0 and a max of 255.\nled <R> <G> <B>");
+    console.AddCommand("sdls", c_SD_ls, "List the contents of a directory on the SD card (root is \"/\").\nsdls <dir>");
+    console.AddCommand("sdcat", c_SD_cat, "Dump the contents of a file from the SD card.\nsdcat <filePath>");
+    console.AddCommand("sdwrite", c_SD_write, "Write a file to the SD card, overwriting it if it exists.\nsdwrite <filePath> <dataToWrite>\nNote that there can't be spaces in the string, since that's the argument delimiter!");
+    console.AddCommand("sdrm", c_SD_rm, "Delete a file from the SD card.\nsdrm <filePath>");
+    console.AddCommand("sdappend", c_SD_append, "Append data to a file.\nsdappend <filePath> <dataToAppend>\nNote that there can't be spaces in the string, since that's the argument delimiter!");
   }
 
   void tick(){
-    console->Listen();
+    console.Listen();
   }
 }

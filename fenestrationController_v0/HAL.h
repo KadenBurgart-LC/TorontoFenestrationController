@@ -64,8 +64,29 @@ namespace HAL {
 	void SD_PrintDirectory(Stream& printer, char* dir);
 
 	/* Print out the contents of a particular file on the SD card.
-       This function takes in any stream, so we can use the Serial interface or the web client. */
-	void SD_PrintFileContents(Stream& printer, char* filePath); 
+       This function takes in any stream, so we can use the Serial interface or the web client. 
+       Returns true if the file was found and printed. */
+	bool SD_PrintFileContents(Stream& printer, char* filePath); 
+
+	/* Take an input stream and write everything from that stream into a file on the SD card
+	   until inputStream.available() isn't true anymore. 
+	   If the file already exists, it will be deleted and replaced with the new data from the
+	   input stream. 
+	   Returns true if the file was written successfully. */
+	bool SD_WriteFileFromStream(Stream& inputStream, char* filePath);
+
+	/* Take a C string and write the contents to a file.
+	   If the file already exists, it will be deleted and replaced with the new data.
+	   Retruns true if the file was written successfully. */
+	bool SD_WriteFile(char* dataToWrite, char* filePath);
+
+	/* Delete a file at the given path. 
+	   Returns true if the file was found and deleted. */
+	bool SD_DeleteFile(char* filePath);
+
+	/* Add to a file on the SD card. Mostly for logging. 
+	   Returns true if we don't notice a problem (fail to open the file). */
+	bool SD_AppendFile(char* dataToAppend, char* filePath);
 }
 
 #endif

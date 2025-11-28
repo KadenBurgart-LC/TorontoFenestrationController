@@ -68,6 +68,11 @@
       Refactoring for the application file structure.
       Continued development on the webserver.
       Added the hardware abstraction layer.
+
+    2025-11-27 - Kaden
+    v0.1 - DRAFT
+      Moving versioning and update notes to GitHub.
+      github.com/KadenBurgart-LC/TorontoFenestrationController
 */
 
 #include "HAL.h"                        // The hardware abstraction layer. Any code relating to a specific piece of hardware goes through here.
