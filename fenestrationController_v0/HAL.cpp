@@ -1,12 +1,12 @@
 #include "HAL.h"
 
-#include <map>
-#include <array>
-#include <P1AM.h>      // The public library for the AutomationDirect controller we are using
-#include <Arduino.h>     
-#include <Adafruit_NeoPixel.h>
-#include <SD.h>
-#include <StreamUtils.h> // Used to turn a string into a stream for SD card file writing utilities https://github.com/bblanchon/ArduinoStreamUtils
+#include <map>		   // standard c++ library
+#include <array>       // standard c++ library
+#include <Arduino.h>   // standard Arduino library
+#include <P1AM.h>      // The public library for the AutomationDirect controller we are using      https://github.com/facts-engineering/P1AM
+#include <Adafruit_NeoPixel.h> // used for the RGB LED on the P1AM-200    https://github.com/adafruit/Adafruit_NeoPixel
+#include <SD.h>		   // standard Arduino library
+#include <StreamUtils.h> // Used to turn a string into a stream for SD card file writing utilities    https://github.com/bblanchon/ArduinoStreamUtils
 
 // Private members
 namespace {

@@ -1,7 +1,10 @@
 #include "th_WebServer.h"
 
-#include <SPI.h>
-#include <Ethernet.h>
+#include <SPI.h>		// standard arduino library
+#include <Ethernet.h>	// standard arduino library
+//#include <EthernetWebServer.h> // ain't nobody got time for that     https://github.com/khoih-prog/EthernetWebServer
+
+#define USE_WS100 false
 
 // Private members
 namespace {
@@ -9,8 +12,13 @@ namespace {
 	bool PRINT_INCOMING_PATHS = true;
 
 	byte MacAddress[6] = {0xDE, 0xAD, 0xEF, 0xFE, 0xED};
-	IPAddress IP = IPAddress(192,168,1,177);
+	IPAddress IP(192,168,1,177);
+	IPAddress GATEWAY(192,168,1,1);
+	IPAddress SUBNET(255,255,255,0);
+	const uint8_t ETH_CS_PIN = 5;   			// From the P1AM-ETH documentation      https://facts-engineering.github.io/modules/P1AM-ETH/P1AM-ETH.html
 	EthernetServer* EthSvr = nullptr;
+
+	//EthernetWebServer Server(80);
 
 	/* When we receive an HTTP request there is a bunch of information in there that we don't need, but we
 	 * DO need the path. The path comes in on the first line between the first two spaces.
@@ -80,6 +88,10 @@ Access-Control-Allow-Origin: *
 
 		respond_json(client, response);
 	}
+
+	void handleRoot(){
+		Server.send(200, "text/plain", "Hello world");
+	}
 }
 
 namespace th_WebServer{
@@ -106,6 +118,8 @@ namespace th_WebServer{
 	 * Use the path to route to an appropriate action and respond.
 	 */
 	void tick(){
+		Server.handleClient();
+
 		EthernetClient client = EthSvr->available();
 
 		if(client){
