@@ -1,3 +1,5 @@
+// NOTE: There is documentation for how this widget is supposed to work. Read the documentation. It's in the README.md within the UI_Webpage folder.
+
 
 // REFRESH BUTTON VISUAL EFFECTS
 var refreshHoverOn = function(){ $(this).attr("src", "./assets/Refresh2Hover.png"); };

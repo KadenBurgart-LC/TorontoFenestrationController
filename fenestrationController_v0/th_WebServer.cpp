@@ -1,96 +1,140 @@
 #include "th_WebServer.h"
 
-#include <SPI.h>		// standard arduino library
-#include <Ethernet.h>	// standard arduino library
-//#include <EthernetWebServer.h> // ain't nobody got time for that     https://github.com/khoih-prog/EthernetWebServer
-
-#define USE_WS100 false
+#include "lib_EthToolbelt.h"
+#include <ArduinoJson.h>		// Downloaded and installed through the Arduino IDE. Author: Benoit Blanchon. Version 7.4.2 installed.
 
 // Private members
 namespace {
-	bool PRINT_INCOMMING_REQUESTS = false;
-	bool PRINT_INCOMING_PATHS = true;
-
-	byte MacAddress[6] = {0xDE, 0xAD, 0xEF, 0xFE, 0xED};
+	uint8_t MacAddress[6] = {0xDE, 0xAD, 0xEF, 0xFE, 0xED};
 	IPAddress IP(192,168,1,177);
-	IPAddress GATEWAY(192,168,1,1);
-	IPAddress SUBNET(255,255,255,0);
-	const uint8_t ETH_CS_PIN = 5;   			// From the P1AM-ETH documentation      https://facts-engineering.github.io/modules/P1AM-ETH/P1AM-ETH.html
-	EthernetServer* EthSvr = nullptr;
 
-	//EthernetWebServer Server(80);
+	const uint8_t LIVE_DATA_MAX_NUM_FIELDS = 15;
+	const uint8_t LIVE_DATA_JSON_KEY_BUFFER_SIZE = 250;
+	const uint8_t LIVE_DATA_JSON_RESP_BUFFER_SIZE = 500;
+	
+	EthernetServer EthSvr(80);
+	lib_EthToolbelt::EthernetButler Jarvis(EthSvr);
 
-	/* When we receive an HTTP request there is a bunch of information in there that we don't need, but we
-	 * DO need the path. The path comes in on the first line between the first two spaces.
-	 * This function grabs the text between the first two spaces and returns it.
-	 */
-	String getRequestPath(String request){
-		String path;
+	bool ExampleAlarmToggleThingy = false;
 
-		int space1 = request.indexOf(' ');
-		int space2 = request.indexOf(' ', space1 + 1);
-
-		path = request.substring(space1+1, space2);
-
-		return path;
+	// The live data packet requester outsources fetching key values to this helper function
+	String liveDataKeyValueFetcher(const char* key){
+		if(strcmp(key, "millis") == 0) return String(millis());
+		else if (strcmp(key, "wExample_liveShortValue") == 0) return (String("LSV: ") + String(millis()/100%100));
+		else return String("NOT FOUND");
 	}
 
-	/* Respond to a client request with a text packet
-	 */
-	void respond_text(EthernetClient client, String text, int code = 200, String reason = "OK"){
-		String response = R"===(
-HTTP/1.1 {{{code}}} {{{reason}}}
-Content-Type: text/html; charset=utf-8
-Access-Control-Allow-Origin: *
+	namespace routeHandlers {
+		/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!     HTTP ROUTING HANDLERS     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+		 * 
+		 * These methods are run when the client requests specific paths in their HTTP method.
+		 * These methods are registered by Jarvis in th_WebServer::initialize(). Look at the Jarvis.On() hookups to see the paths
+		 * for each method.
+		 *
+		 * Name the method starting with...
+		 *   G_ for methods that accept GET requests (request data from the server).
+		 *   P_ for methods that accept POST requests (send data to the server).
+		 *   DO NOT USE PUT REQUESTS because programmers SUCK THEY'RE FUCKING AWFUL
+		 * 
+		 *   RULE: If a path accepts multiple types of requests, you can combine those prefixes in the order G, U, O.
+		 *   RULE: If the request is coming from a UI widget, the handler should be named after the ID of the widget. 
+		 *         Widget IDs start with a lowercase w.
+		 *
+		 *   Example: If we have a method for adding or retrieving log messages, where GET returns the last log message,
+		 *            or POST adds a new log line, we might name the handler GP_wLogLine, if the AJAX requests 
+		 *	          are coming from a widget with ID "wLogLine".
+		 */
 
-{{{TEXT}}})===";
+		void index(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
+			lib_EthToolbelt::respond_text(client, F("This server cannot currently supply its own web app. The web app must be downloaded from https://github.com/KadenBurgart-LC/TorontoFenestrationController/tree/main/UI_Webpage"));
+		}
 
-		response.replace("{{{code}}}", String(code));
-		response.replace("{{{reason}}}", String(reason));
-		response.replace("{{{TEXT}}}", String(text));
+		// Example smart-short-value handler
+		void G_wExample_smartShortValue(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
+			if(message.Method == lib_EthToolbelt::REQ_TYPE::GET) lib_EthToolbelt::respond_text(client, String(millis()));
+			else lib_EthToolbelt::respond_405(client, F("smart-short-value widgets only accept GET requests."));
+		}
 
-		client.print(response);
-	}
+		// Example toggle handler (turns on and off the example alarm)
+		void GP_wExample_toggle(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
+			if(message.Method == lib_EthToolbelt::REQ_TYPE::POST){
+				if(message.Body == "setTo=1"){
+					ExampleAlarmToggleThingy = true;
+					lib_EthToolbelt::respond_text(client, String("1"));
+				}
+				else {
+					ExampleAlarmToggleThingy = false;
+					lib_EthToolbelt::respond_text(client, String("0"));
+				}
+			}
+			else if(message.Method == lib_EthToolbelt::REQ_TYPE::GET){
+				lib_EthToolbelt::respond_text(client, String((int)ExampleAlarmToggleThingy));
+			}
+			else lib_EthToolbelt::respond_405(client, F("toggle widgets only accept GET or PUT requests."));
+		}
 
-	/* Respond to a client request with a JSON packet
-	 */
-	void respond_json(EthernetClient client, String json, int code = 200, String reason = "OK"){
-		String response = R"===(
-HTTP/1.1 {{{code}}} {{{reason}}}
-Content-Type: application/json
-Access-Control-Allow-Origin: *
+		// Example value-sender handler
+		void GP_wExample_valueSender(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
+			static float myVal = 0;
 
-{{{JSON}}})===";
+			if(message.Method == lib_EthToolbelt::REQ_TYPE::POST){
+				myVal = atof(message.Body.c_str()+6); // value=###   <-- the value part is 6 chars long
+				lib_EthToolbelt::respond_text(client, String(myVal));
+			}
+			else if(message.Method == lib_EthToolbelt::REQ_TYPE::GET) lib_EthToolbelt::respond_text(client, String(myVal));
+			else lib_EthToolbelt::respond_405(client, F("value-sender widgets only accept GET or PUT requests."));
+		}
 
-		response.replace("{{{code}}}", String(code));
-		response.replace("{{{reason}}}", String(reason));
-		response.replace("{{{JSON}}}", String(json));
+		// Example alarm handler (the example toggle turns the alarm on and off)
+		void G_wExample_alarm(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
+			if(message.Method == lib_EthToolbelt::REQ_TYPE::GET){
+				lib_EthToolbelt::respond_text(client, String((int)ExampleAlarmToggleThingy));
+			}
+			else lib_EthToolbelt::respond_405(client, F("alarm widgets only accept GET requests."));
+		}
 
-		client.print(response);
-	}
+		void G_wExample_liveShortValue(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
+			if(message.Method == lib_EthToolbelt::REQ_TYPE::GET){
+				lib_EthToolbelt::respond_text(client, (String("LSV:") + String(millis()/100%100)));
+			} else lib_EthToolbelt::respond_405(client, F("This method only accepts GET requests."));
+		}
 
-	void respond_404(EthernetClient client){
-		String response = R"===(
-HTTP/1.1 404 Not Found
-Content-Type: text/plain
-Access-Control-Allow-Origin: *
+		// The client UI requests live data in a packet each second. It asks us for certain values, and we give it those specific values.
+		void P_liveDataPacketRequest(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
+			// This function expects a stringified JSON array of keys that looks like...
+			// ["key1","key2","key3",...]
+			// The JSON array is parsed using the ArduinoJson library.
 
-404 Not Found: The requested resource does not exist.)===";
+			if(message.Method == lib_EthToolbelt::REQ_TYPE::POST){
+				const size_t JsonInputDocCapacity = JSON_ARRAY_SIZE(LIVE_DATA_MAX_NUM_FIELDS) + LIVE_DATA_JSON_KEY_BUFFER_SIZE;
+				StaticJsonDocument<JsonInputDocCapacity> jsonDoc;
 
-		client.print(response);
-	}
+				DeserializationError err = deserializeJson(jsonDoc, message.Body);
 
-	void pathHandler_get_pressure(EthernetClient client){
-		String response = R"===({"millis":{{{millis}}},"pressure":{{{pressure}}}})===";
+				if(err){
+					Serial.print(F("ERROR: th_WebServer: Live data packet request: Failed to deserialize JSON array: "));
+					Serial.println(err.f_str());
+					lib_EthToolbelt::respond_400(client, F("Invalid JSON formatting"));
+					return;
+				}
 
-		response.replace("{{{millis}}}", String(millis()));
-		response.replace("{{{pressure}}}", "100");
+				JsonArray requestedKeys = jsonDoc.as<JsonArray>();
 
-		respond_json(client, response);
-	}
+				const size_t JsonOutputDocCapacity = JSON_ARRAY_SIZE(LIVE_DATA_MAX_NUM_FIELDS) + LIVE_DATA_JSON_RESP_BUFFER_SIZE;
+				StaticJsonDocument<JsonOutputDocCapacity> jsonResponse;
 
-	void handleRoot(){
-		Server.send(200, "text/plain", "Hello world");
+				for(const char* key : requestedKeys){
+					// Start fetching data and building the response object
+					jsonResponse[key] = liveDataKeyValueFetcher(key);
+				}
+
+				lib_EthToolbelt::respond_json(client, ""); // send JSON headers
+				serializeJson(jsonResponse, client);
+			}
+			else lib_EthToolbelt::respond_405(client, F("The live data packet request endpoint only accepts POST requests."));
+		}
+
+		/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   / HTTP ROUTING HANDLERS     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 	}
 }
 
@@ -100,58 +144,31 @@ namespace th_WebServer{
 
 		// Check for Ethernet hardware present
 		if (Ethernet.hardwareStatus() == EthernetNoHardware) {
-			Serial.println("Ethernet shield was not found. Can not initialize webserver.");
+			Serial.println(F("Ethernet shield was not found. Can not initialize webserver."));
 		}
 		else if (Ethernet.linkStatus() == LinkOFF) {
-			Serial.println("Ethernet cable is not connected. Can not initialize webserver.");
+			Serial.println(F("Ethernet cable is not connected. Can not initialize webserver."));
 		}
 		else{
-			EthSvr = new EthernetServer(80);
-			EthSvr->begin();
+			EthSvr.begin();
 
-			Serial.print("Starting local server at ");
+			Serial.print(F("Starting local server at "));
 			Serial.println(Ethernet.localIP());
 		}
+
+		Jarvis.On("/", routeHandlers::index);
+		Jarvis.On("/w/wExample_smartShortValue", routeHandlers::G_wExample_smartShortValue);
+		Jarvis.On("/w/wExample_valueSender", routeHandlers::GP_wExample_valueSender);
+		Jarvis.On("/w/wExample_toggle", routeHandlers::GP_wExample_toggle);
+		Jarvis.On("/w/wExample_alarm", routeHandlers::G_wExample_alarm);
+		Jarvis.On("/w/wExample_liveShortValue", routeHandlers::G_wExample_liveShortValue);
+		Jarvis.On("/liveDataPacketRequest", routeHandlers::P_liveDataPacketRequest);
 	}
 
 	/* Check and see if client requests have come in. Read the requests. Grab the requested path.
 	 * Use the path to route to an appropriate action and respond.
 	 */
 	void tick(){
-		Server.handleClient();
-
-		EthernetClient client = EthSvr->available();
-
-		if(client){
-			// Read the incoming request
-		    String request = "";
-		    while (client.available()) {
-		      request += (char)client.read();
-		    }
-
-		    String path = getRequestPath(request);
-
-		    if(PRINT_INCOMMING_REQUESTS){
-			    Serial.println("Web Server request received: ");
-			    Serial.println(request);
-		    }
-		    else if (PRINT_INCOMING_PATHS){
-		    	Serial.print("Web Server request received for path: ");
-			    Serial.println(path);
-		    }
-
-		    // ROUTING GOES HERE
-		    if(path == "/") respond_text(client, "Request received. Server is online.");
-		    else if(path == "/get/pressure") pathHandler_get_pressure(client);
-		    else if(path == "/get/w5") respond_404(client); // Structural pressure direction
-		    else if(path == "/set/w1") respond_404(client); // Structural blower toggle
-		    else {
-		    	respond_404(client);
-		    }
-
-			delay(1);
-			client.stop();
-		}
+		Jarvis.Serve();
 	}
 }
-

@@ -9,6 +9,7 @@ div {
 
 #pageContainer {
   display: grid;
+  border-style: none;
   grid-template-columns: 60px minmax(800px, auto) 60px;
 }
 
@@ -32,22 +33,130 @@ div {
   padding: 15px;
 }
 
-.textField > input {
-  margin: 2px;
-  width: 102px;
-  height: 28px;
-  border: none;
-
-  font-size: 1.2em;
-  text-align:center; 
+.example {
+  background-color: #EEE0FF;
 }
+
+
+
+
 
 .widget {
   padding: 10px;
 }
+.widget .dataField > input {
+  margin: 2px;
+  height: 28px;
+  border: none;
+
+  font-size: 1.2em;
+}
 .widget .label {
   padding: 9px 0 0 5px;
 }
+
+
+
+
+
+.widget .live-short-value .dataField > input {
+  width: 102px;
+  text-align:center; 
+}
+.widget .live-short-value {
+  display:grid; 
+  grid-template-columns: 35px 110px 35px 1fr;
+}
+
+
+
+
+.widget .label-value {
+  display: grid;
+  grid-template-columns: 145px 1fr 35px;
+}
+.widget .label-value .label {
+  padding: 9px 0 0 5px;
+  font-weight: bold;
+  text-align: center;
+}
+.widget .label-value .dataField > input {
+  text-align: left;
+  width: 98%;
+}
+
+
+
+
+
+.widget .smart-short-value .dataField > input {
+  width: 102px;
+  text-align:center; 
+}
+.widget .smart-short-value {
+  display:grid; 
+  grid-template-columns: 35px 110px 1fr;
+}
+
+
+
+
+.widget .toggle {
+  display:grid; 
+  grid-template-columns: 35px 110px 1fr;
+}
+.widget .toggleSlider {
+  height: 35px;
+  padding-left: 6px;
+}
+.widget .toggleSlider center {
+  position:relative;
+}
+.widget .toggleSlider .sit {
+  background-color: #999; 
+  position: absolute; 
+  top: 8px; 
+  left: 25px; 
+  height: 18px; 
+  width: 45px;
+  border-radius: 3px;
+}
+.widget .toggleSlider .slide {
+  background-color: #DDD; 
+  position: absolute; 
+  top: 5px; 
+  left: 15px; 
+  height: 24px; 
+  width: 25px;
+  border-radius: 5px;
+  background-image: url('../assets/slide.png');
+  background-size: 16px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+
+
+.widget .value-sender {
+  display: grid;
+  grid-template-columns: 35px 110px 35px 1fr;
+}
+.widget .value-sender .dataField > input {
+  width: 102px;
+  text-align:center; 
+}
+
+
+
+
+.widget .alarm {
+  display: grid;
+  grid-template-columns: 35px 35px 1fr;
+}
+
+
+
+
 .widget .grid {
   display:grid; 
   grid-template-columns: 35px 110px 1fr;
@@ -65,18 +174,7 @@ div {
   display:grid; 
   grid-template-columns: 35px 35px 1fr;
 }
-.widget .midText {
-  display: grid;
-  grid-template-columns: 145px 1fr 35px;
-}
-.widget .midText .label {
-  padding: 9px 0 0 5px;
-  font-weight: bold;
-  text-align: center;
-}
-.widget .midText .textField > input {
-  text-align: left;
-}
+
 
 .refresh > img {
   margin: 5px 0 0 5px;
@@ -96,35 +194,6 @@ div {
   height: 24px;
 }
 
-.toggle {
-  height: 35px;
-  padding-left: 10px;
-}
-.toggle center {
-  position:relative;
-}
-.toggle .sit {
-  background-color: #999; 
-  position: absolute; 
-  top: 8px; 
-  left: 25px; 
-  height: 18px; 
-  width: 45px;
-  border-radius: 3px;
-}
-.toggle .slide {
-  background-color: #DDD; 
-  position: absolute; 
-  top: 5px; 
-  left: 15px; 
-  height: 24px; 
-  width: 25px;
-  border-radius: 5px;
-  background-image: url('../assets/slide.png');
-  background-size: 16px;
-  background-repeat: no-repeat;
-  background-position: center;
-}
 
 .indicator {
   position: relative;

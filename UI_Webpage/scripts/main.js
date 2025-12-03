@@ -2,38 +2,11 @@
 
 var rootUrl = 'http://192.168.1.177';
 
-// LIVE TEXT FIELD
-$('.go>img').hover(
-    function(){ $(this).attr("src", "./assets/Go2.png"); },
-    function(){ $(this).attr("src", "./assets/Go.png"); }
-  );
-
-
-// INDICATORS
-var indicatorRefreshHandler = function(refreshImg){
-    refreshButtonLoadingMode(refreshImg);
-
-    var w = refreshImg.closest('.widget');
-    var id = w.attr('id');
-    var img = w.find('.indicator > img');
-    
-    $.get(rootUrl + '/get/' + id,
-        function(data){
-          if(data == "1") img.attr('src', './assets/warnGif.gif');
-          else img.attr('src', './assets/Warn.png');
-        })
-        .fail(function(){
-          img.attr('src', './assets/warnGif.gif');
-        })
-        .always(function(){
-          refreshButtonReadyMode(refreshImg);
-        });
-  };
-$('.indicator').closest('.widget').find('.refresh>img').click(function(){ indicatorRefreshHandler($(this)); });
 
 // INDIVIDUAL WIDGET BEHAVIORS
-$('#currentAction').find('input').val("Ready");
-$('#currentActionTimer').find('input').val("0 s");
+$('#wCurrentAction').find('input').val("Ready");
+$('#wCurrentActionTimer').find('input').val("0 s");
+$('#wExample_labelValue').find('input').val("Label value example data field");
 
 /*  *****     *****     *****     ***** /UI INTERAVTIVITY  *****     *****     *****     *****  */
 
@@ -41,7 +14,100 @@ $('#currentActionTimer').find('input').val("0 s");
 
 /*  *****     *****     *****     *****  PAGE UPDATE INTERVALS  *****     *****     *****     *****  */
 
+/* Fields that need to get live updates register themselves in this object.
+ * 
+ * STRUCTURE:
+ * {
+ *   'variableKey1' : callbackFunction1,
+ *   'variableKey2' : callbackFunction2
+ * }
+ *
+ * To subscribe:
+ * subscribeToLiveDataRequester('myKey', myCallbackFunction);
+ *
+ * The callback function for subscribers needs to be able to receive and process the response data object.
+ *
+ * The STRUCTURE of the data object that gets passed to each callback function:
+ * {
+ *   'variableKey1' : data1fromServer,
+ *   'variableKey2' : data2fromServer,
+ * }
+ *
+ * To unsubscribe:
+ * unsubscribeFromLiveDataRequester('myKey');
+ *
+ * TODO: Change the behavior so that multiple subscribers can register to look at the same key, but the server
+ *       only gets asked for each key's value once, and the subscribers only get the value of the one key they
+ *       subscribed to instead of getting the whole response object.
+ */
+const liveDataSubscribers = {};
 
+function subscribeToLiveDataRequester(keyStr, callbackFunc){
+  if(liveDataSubscribers[keyStr] == undefined){
+    liveDataSubscribers[keyStr] = callbackFunc;
+  }
+  else {
+    console.warn('LiveDataRequester: ${keyStr} attempted to subscribe to the LiveDataRequester, but they are already subscribed.');
+  }
+}
+
+function unsubscribeFromLiveDataRequester(keyStr){
+  if(liveDataSubscribers[keyStr] !== undefined){
+    delete liveDataSubscribers[keyStr];
+  }
+  else {
+    console.warn('LiveDataRequester: ${keyStr} attempted to unsubscribe from the LiveDataRequester, but they are not in the subscriber list.');
+  }
+}
+
+var liveDataRequester_TimerEventHandler = function(){
+  const keysToRequest = Object.keys(liveDataSubscribers);
+
+  if (keysToRequest.length == 0) return;
+
+  $.post(rootUrl + '/liveDataPacketRequest',
+      JSON.stringify(keysToRequest),
+      function(data){
+        for (const subscriber in liveDataSubscribers) {
+          const callbackFunc = liveDataSubscribers[subscriber];
+
+          if(callbackFunc) callbackFunc(data);
+        }
+      },
+      'json'
+    )
+    .fail(function(jqXHR, textStatus, errorThrown){
+      console.error("LiveDataRequester: Live data packet request failed.");
+    });
+}
+
+var liveDataRequester_TimerEvent = setInterval(liveDataRequester_TimerEventHandler, 1000);
+
+/*  *****     *****     *****     ***** /PAGE UPDATE INTERVALS  *****     *****     *****     *****  */
+
+
+
+
+
+
+/*  *****     *****     *****     *****   RANDOM UTILITIES  *****     *****     *****     *****  */
+
+var testData = undefined;
+
+var testLiveDataSubscriber = function(data){
+  testData = data;
+}
+
+subscribeToLiveDataRequester("test", testLiveDataSubscriber);
+//subscribeToLiveDataRequester("wExample_liveShortValue", testLiveDataSubscriber);
+subscribeToLiveDataRequester("millis", testLiveDataSubscriber);
+
+var pingServer = function(){
+  $.get(rootUrl,
+    function(data){
+      console.log(data);
+    });
+};
 
 var ajaxTester = function(){
   $.get(rootUrl + '/get/pressure',
@@ -51,13 +117,18 @@ var ajaxTester = function(){
     });
 };
 
-var pingServer = function(){
-  $.get(rootUrl,
-    function(data){
-      console.log(data);
+var testToggleOn = function(){
+  $.ajax({
+      url: rootUrl + '/w/wExample_toggle',
+      type: 'POST',
+      data: { setTo: 1 }
+    }).done(function(data){
+      if(data == "1") slider.animate({left: '55px'}, 150, callbackFunction);
+      else slider.animate({left: '15px'}, 150, callbackFunction);
+    })
+    .always(function(){
+      alert('done');
     });
 };
 
-//var puI = setInterval(pressureUpdater, 500);
-
-/*  *****     *****     *****     ***** /PAGE UPDATE INTERVALS  *****     *****     *****     *****  */
+/*  *****     *****     *****     ***** / RANDOM UTILITIES  *****     *****     *****     *****  */

@@ -16,88 +16,127 @@
       <div id="mainGrid">
         <div class="titleBlock"><center>Fenestration Test Panel - Control Console<center></div>  
             
-        <div class="widget" id="currentAction">
-          <div class="midText">
-            <div class="label">Current Action</div>
-            <div class="textField" style="grid-column: 2 / span 2;"><input type="text" disabled="" /></div>
-            <!-- <div class="refresh"><img src="./assets/Refresh2.png"/></div> -->
+        <div class="example widget" id="wExample_liveShortValue">
+          <div class="live-short-value">
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
+            <div class="go"><img src="./assets/Go.png"/></div>
+            <div class="label">Example live-short-value label</div>
           </div>
         </div>
-        <div class="widget" id="currentActionTimer">
-          <div class="midText">
-            <div class="label">Timer</div>
-            <div class="textField" style="grid-column: 2 / span 2;"><input type="text" disabled="" /></div>
-            <!-- <div class="refresh"><img src="./assets/Refresh2.png"/></div> -->
+        <div class="example widget" id="wExample_labelValue">
+          <div class="label-value">
+            <div class="label">Label Value</div>
+            <div class="dataField" style="grid-column: 2 / span 2;"><input type="text" disabled="" /></div>
           </div>
-        </div>  
+        </div>
 
-        <div class="widget" id="w1">
-          <div class="grid">
+        
+        <div class="example widget" id="wExample_smartShortValue">
+          <div class="smart-short-value">
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
+            <div class="label">Example smart-short-value Label</div>
+          </div>
+        </div>   
+        <div class="example widget" id="wExample_toggle">
+          <div class="toggle">
             <div class="refresh"><img src="./assets/Refresh2.png" /></div>
-            <div class="toggle"><center><div class="sit"></div><div class="slide"></div></center></div>
-            <div class="label">Example Toggle</div>
+            <div class="toggleSlider"><center><div class="sit"></div><div class="slide"></div></center></div>
+            <div class="label">Example toggle Label (Turn alarm on)</div>
           </div>
         </div>      
-        <div class="widget" id="w4">
-          <div class="grid">
-            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
-            <div class="textField"><input type="text" disabled="" /></div>
-            <div class="label">Example Short Text</div>
-          </div>
-        </div>     
 
-        <div class="widget" id="w2">
-          <div class="grid">
+
+        <div class="example widget" id="wExample_valueSender">
+          <div class="value-sender">
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="dataField"><input type="text" /></div>
+            <div class="send"><img src="./assets/Send.png"/></div>
+            <div class="label">Example value-sender Label</div>
+          </div>
+        </div>
+        <div class="example widget" id="wExample_alarm">
+          <div class="alarm">
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="indicator"><img src="./assets/Warn.png"/></div>
+            <div class="label">Example alarm Label</div>
+          </div>
+        </div>
+
+
+
+
+
+
+
+
+        <div class="widget" id="wCurrentAction">
+          <div class="label-value">
+            <div class="label">Current Action</div>
+            <div class="dataField" style="grid-column: 2 / span 2;"><input type="text" disabled="" /></div>
+          </div>
+        </div>
+        <div class="widget" id="wCurrentActionTimer">
+          <div class="label-value">
+            <div class="label">Timer</div>
+            <div class="dataField" style="grid-column: 2 / span 2;"><input type="text" disabled="" /></div>
+          </div>
+        </div>    
+
+        <div class="widget" id="wNegativePressure">
+          <div class="toggle">
             <div class="refresh"><img src="./assets/Refresh2.png" /></div>
-            <div class="toggle"><center><div class="sit"></div><div class="slide"></div></center></div>
+            <div class="toggleSlider"><center><div class="sit"></div><div class="slide"></div></center></div>
             <div class="label">Negative Pressure</div>
           </div>
         </div>      
-        <div class="widget" id="w5">
-          <div class="grid">
+        <div class="widget" id="wPressureDirection">
+          <div class="smart-short-value">
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
-            <div class="textField"><input type="text" disabled="" /></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
             <div class="label">Pressure Direction</div>
           </div>
         </div>
 
-        <div class="widget" id="w3">
-          <div class="live-grid">
+        <div class="widget" id="wTargetPressure">
+          <div class="value-sender">
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
-            <div class="textField"><input type="text" /></div>
+            <div class="dataField"><input type="text" /></div>
             <div class="send"><img src="./assets/Send.png"/></div>
             <div class="label">Target Pressure (kPa)</div>
           </div>
         </div>
-        <div class="widget" id="w6">
-          <div class="live-grid">
+        <div class="widget" id="wCurrentPressure">
+          <div class="live-short-value">
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
-            <div class="textField"><input type="text" disabled="" /></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
             <div class="go"><img src="./assets/Go.png"/></div>
             <div class="label">Current Pressure</div>
           </div>
         </div>
 
         <div id="LiveGraph"></div>
-        <div class="widget" id="w11">
-          <div class="grid">
+
+        <div class="widget" id="wWaterPump">
+          <div class="toggle">
             <div class="refresh"><img src="./assets/Refresh2.png" /></div>
-            <div class="toggle"><center><div class="sit"></div><div class="slide"></div></center></div>
+            <div class="toggleSlider"><center><div class="sit"></div><div class="slide"></div></center></div>
             <div class="label">Water Pump</div>
           </div>
         </div>
 
         <div class="widget">Pump Timer Widget</div>
 
-        <div class="widget" id="w12">
-          <div class="grid">
+        <div class="widget" id="wPropValve1">
+          <div class="smart-short-value">
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
-            <div class="textField"><input type="text" disabled="" /></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
             <div class="label">Proportional Valve 1</div>
           </div>
         </div>
         <div class="widget" id="w14">
-          <div class="indicator-grid">
+          <div class="alarm">
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
             <div class="indicator"><img src="./assets/Warn.png"/></div>
             <div class="label">Proportional Valve 1 Fault</div>
@@ -105,14 +144,14 @@
         </div>
 
         <div class="widget" id="w13">
-          <div class="grid">
+          <div class="smart-short-value">
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
-            <div class="textField"><input type="text" disabled="" /></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
             <div class="label">Proportional Valve 2</div>
           </div>
         </div>
         <div class="widget" id="w15">
-          <div class="indicator-grid">
+          <div class="alarm">
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
             <div class="indicator"><img src="./assets/Warn.png"/></div>
             <div class="label">Proportional Valve 2 Fault</div>
@@ -126,7 +165,9 @@
   <script src="./scripts/graph.js"></script>
   <script src="./scripts/main.js"></script>
   <script src="./scripts/widgets_common.js"></script>
+  <script src="./scripts/widgets_live-short-value.js"></script>
   <script src="./scripts/widgets_smart-short-value.js"></script>
   <script src="./scripts/widgets_value-sender.js"></script>
   <script src="./scripts/widgets_toggle.js"></script>
+  <script src="./scripts/widgets_alarm.js"></script>
 </html>

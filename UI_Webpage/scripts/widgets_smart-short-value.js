@@ -1,12 +1,14 @@
+// NOTE: There is documentation for how this widget is supposed to work. Read the documentation. It's in the README.md within the UI_Webpage folder.
+
 // SMART-SHORT-VALUE WIDGETS
-var textFieldRefreshHandler = function(refreshImg){
+var smartShortValueRefreshHandler = function(refreshImg){
       refreshButtonLoadingMode(refreshImg);
 
       var w = refreshImg.closest('.widget');
       var id = w.attr('id');
       var textField = w.find('input');
 
-      $.get(rootUrl + '/get/' + id,
+      $.get(rootUrl + '/w/' + id,
         function(data){
           textField.val(data);
         })
@@ -18,4 +20,4 @@ var textFieldRefreshHandler = function(refreshImg){
         });
   };
 
-$('.textField').closest('.widget').find('.refresh>img').click(function(){ textFieldRefreshHandler($(this)); });
+$('.smart-short-value').find('.refresh>img').click(function(){ smartShortValueRefreshHandler($(this)); });

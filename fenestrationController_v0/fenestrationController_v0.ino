@@ -119,7 +119,7 @@ void setup() {
 
   kernel->Threads[T_WEBSVR]->RootMethod = th_WebServer::tick;
   kernel->Threads[T_WEBSVR]->Active = true;
-  kernel->Threads[T_WEBSVR]->ReadyPeriod_ms = 500;
+  kernel->Threads[T_WEBSVR]->ReadyPeriod_ms = 100;
 }
 
 void loop() {

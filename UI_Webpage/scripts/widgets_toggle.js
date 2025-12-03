@@ -1,4 +1,5 @@
-// TOGGLE SWITCHES
+// NOTE: There is documentation for how this widget is supposed to work. Read the documentation. It's in the README.md within the UI_Webpage folder.
+
 var toggleClickHandler = function(toggle){
     var slider = toggle.find(".slide");
     var w = slider.closest(".widget");
@@ -11,15 +12,17 @@ var toggleClickHandler = function(toggle){
     var callbackFunction = function() { 
       refreshButtonReadyMode(refreshImage);
 
-      if(id == "w2") textFieldRefreshHandler($('#w5>div>div>img'));
+      //if(id == "w2") textFieldRefreshHandler($('#w5>div>div>img')); // I have no idea what this used to do
     };
 
     // TURN ON 
     if(slider.css("left") == "15px") { 
       slider.animate({left: '35px'}, 150, function(){
-          $.post(rootUrl + '/set/' + id,
-              { setTo: 1 }
-            ).done(function(data){
+          $.ajax({
+              url: rootUrl + '/w/' + id,
+              type: 'POST',
+              data: { setTo: 1 }
+            }).done(function(data){
               if(data == "1") slider.animate({left: '55px'}, 150, callbackFunction);
               else slider.animate({left: '15px'}, 150, callbackFunction);
             })
@@ -30,11 +33,13 @@ var toggleClickHandler = function(toggle){
     }
     
     // TURN OFF (if the slider is stuck somewhere, we will treat a click as a command to turn off)
-    else /*if($(this).find(".slide").css("left") == "55px")*/ { 
+    else { 
       slider.animate({left: '35px'}, 150, function(){
-          $.post(rootUrl + '/set/' + slider.closest(".widget").attr('id'),
-              { setTo: 0 }
-            ).done(function(data){
+          $.ajax({
+              url: rootUrl + '/w/' + id,
+              type: 'POST',
+              data: { setTo: 0 }
+            }).done(function(data){
               if(data == "1") slider.animate({left: '55px'}, 150, callbackFunction);
               else slider.animate({left: '15px'}, 150, callbackFunction);
             })
@@ -44,7 +49,10 @@ var toggleClickHandler = function(toggle){
         });
     }
   };
-$('.toggle').click(function() { toggleClickHandler($(this)); });
+$('.toggleSlider').click(function() { toggleClickHandler($(this)); });  // BIND THE CLICK EVENT
+
+
+
 
 var toggleRefreshHandler = function(refreshImg){
     refreshButtonLoadingMode(refreshImg);
@@ -58,7 +66,7 @@ var toggleRefreshHandler = function(refreshImg){
       };
 
     slide.animate({left: '35px'}, 150, function(){
-      $.get(rootUrl + '/get/' + id,
+      $.get(rootUrl + '/w/' + id,
         function(data){
           if(data == "1") slide.animate({left: '55px'}, 150, callbackFunction);
           else slide.animate({left: '15px'}, 150, callbackFunction);
@@ -68,4 +76,4 @@ var toggleRefreshHandler = function(refreshImg){
         });
     });
   };
-$('.toggle').closest('.widget').find('.refresh>img').click(function(){ toggleRefreshHandler($(this)); });
+$('.toggle').closest('.widget').find('.refresh>img').click(function(){ toggleRefreshHandler($(this)); });  // BIND THE REFRESH EVENT
