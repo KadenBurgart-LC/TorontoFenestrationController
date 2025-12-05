@@ -54,10 +54,14 @@ namespace {
 			lib_Eth::respond_text(client, F("This server cannot currently supply its own web app. The web app must be downloaded from https://github.com/KadenBurgart-LC/TorontoFenestrationController/tree/main/UI_Webpage"));
 		}
 
-		// Example smart-short-value handler
 		void G_wExample_smartShortValue(EthernetClient& client, lib_Eth::HttpMsg& message){
 			if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, String(millis()));
 			else lib_Eth::respond_405(client, F("smart-short-value widgets only accept GET requests."));
+		}
+
+		void G_wExample_smartLabelValue(EthernetClient& client, lib_Eth::HttpMsg& message){
+			if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, "Example label value: " + String(millis()));
+			else lib_Eth::respond_405(client, F("smart-label-value widgets should only accept GET requests."));
 		}
 
 		// Example toggle handler (turns on and off the example alarm)

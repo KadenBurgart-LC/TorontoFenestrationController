@@ -12,6 +12,7 @@ namespace {
     config.numCommands = 15;
     config.maxFullLineLength = 100;
     config.maxArgLength = 80;
+    config.maxNumArgs = 8;
 
     return config;
   }
@@ -166,6 +167,34 @@ namespace {
     if(success) Serial.println("Data appended successfully.");
     else Serial.println("Failed to append data.");
   }
+
+  // Set the date and time on the RTC
+  void c_RTC_set(){
+    /* Prameters must be as follows...
+         arg[1] = "Jan"      - This needs to be a 3 letter code with the first letter capitalized and the last two letters lower-case
+         arg[2] = "12"       - This needs to be two characters that form the day of the month
+         arg[3] = "2025"     - This needs to be four characters that form the day of the year
+         arg[4] = "Fri"      - This needs to be a 3 letter code with the first letter capitalized and the last two letters lower-case
+         arg[5] = "08:00:00" - HH:MM:SS exactly
+     */
+    // String date = String(console.Arguments[1]) + " " + String(console.Arguments[2]) + " " + String(console.Arguments[3]) + " " + String(console.Arguments[4]);
+    // String time = String(console.Arguments[5]);
+
+    // HAL::RTC_SetDateTime(date, time);
+
+    uint16_t year = atoi(console.Arguments[1]);
+    uint8_t month = atoi(console.Arguments[2]);
+    uint8_t day = atoi(console.Arguments[3]);
+    uint8_t hour = atoi(console.Arguments[4]);
+    uint8_t minute = atoi(console.Arguments[5]);
+    uint8_t second = atoi(console.Arguments[6]);
+
+    HAL::RTC_SetDateTime(year, month, day, hour, minute, second);
+  }
+
+  void c_RTC_get(){
+    Serial.println(HAL::RTC_GetDateTime());
+  }
 }
 
 namespace th_SerialConsole{
@@ -181,6 +210,9 @@ namespace th_SerialConsole{
     console.AddCommand("sdwrite", c_SD_write, "Write a file to the SD card, overwriting it if it exists.\nsdwrite <filePath> <dataToWrite>\nNote that there can't be spaces in the string, since that's the argument delimiter!");
     console.AddCommand("sdrm", c_SD_rm, "Delete a file from the SD card.\nsdrm <filePath>");
     console.AddCommand("sdappend", c_SD_append, "Append data to a file.\nsdappend <filePath> <dataToAppend>\nNote that there can't be spaces in the string, since that's the argument delimiter!");
+    console.AddCommand("RTCget", c_RTC_get, "Print the current date and time according to the Real-Time Clock");
+    //console.AddCommand("RTCset", c_RTC_set, "Set the date and time on the RTC.\nRTCset Dec 05 2025 Fri 11:45:00\nNote: This is picky as fuck.");
+    console.AddCommand("RTCset", c_RTC_set, "Set the date and time on the RTC.\nRTCset <YYYY> <MM> <DD> <HH> <MM> <SS>\nExample: RTCset 2025 12 05 15 21 00");
   }
 
   int8_t tick(){

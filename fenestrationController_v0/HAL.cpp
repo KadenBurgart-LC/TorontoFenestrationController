@@ -2,11 +2,14 @@
 
 #include <map>		   // standard c++ library
 #include <array>       // standard c++ library
+#include <string.h>    // standard c++ library
 #include <Arduino.h>   // standard Arduino library
-#include <P1AM.h>      // The public library for the AutomationDirect controller we are using      https://github.com/facts-engineering/P1AM
-#include <Adafruit_NeoPixel.h> // used for the RGB LED on the P1AM-200    https://github.com/adafruit/Adafruit_NeoPixel
 #include <SD.h>		   // standard Arduino library
+#include <P1AM.h>      // The public library for the AutomationDirect P1AM-200 controller we are using      https://github.com/facts-engineering/P1AM
+#include <Adafruit_NeoPixel.h> // used for the RGB LED on the P1AM-200    https://github.com/adafruit/Adafruit_NeoPixel
 #include <StreamUtils.h> // Used to turn a string into a stream for SD card file writing utilities    https://github.com/bblanchon/ArduinoStreamUtils
+#include <PCF8563.h>   // Used for the RTC on the P1AM-200; I hate this library        https://github.com/facts-engineering/PCF8563_RTC
+#include <TimeLib.h>   // Used for working with time_t objects, mostly for the RTC         https://github.com/PaulStoffregen/Time
 
 // Private members
 namespace {
@@ -106,8 +109,8 @@ namespace HAL {
 		P1.configureModule(P1_08ADL_2_CONFIG, 3); //sends the config data to the analog voltage input module in slot 3
 	}
 
-	// Set the colour of the RGB LED on the controller
-	// WARNING: The LED is very bright. You probably don't want to turn it up higher than 10/255.
+	/* Set the colour of the RGB LED on the controller
+	   WARNING: The LED is very bright. You probably don't want to turn it up higher than 10/255. */
 	void set_C0_1_RgbLed(uint8_t R, uint8_t G, uint8_t B){
 		C0_1_RgbLed.setPixelColor(0, R, G, B);
 		C0_1_RgbLed.show();
@@ -219,5 +222,46 @@ namespace HAL {
 		}
 
 		return success;
+	}
+
+	/* A function to set the date and time on the RTC that DOESN'T SUCK FERMENTED ASSHOLE */
+	void RTC_SetDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second){
+		tmElements_t te;
+
+		te.Year = year - 1970; // Yeah it's weird it's just how the library works.
+		te.Month = month;
+		te.Day = day;
+		te.Hour = hour;
+		te.Minute = minute;
+		te.Second = second;
+
+		time_t t = makeTime(te);
+
+		PCF8563_RTC.setEpoch(t);
+	}
+
+	/* A function to recall the current date and time from the Real-Time Clock */
+	String RTC_GetDateTime(){
+		String dateTimeStr = "";
+		time_t t = PCF8563_RTC.getEpoch();
+
+		dateTimeStr += year(t);
+		dateTimeStr += "-";
+		dateTimeStr += (month(t) < 10) ? "0" : "";
+		dateTimeStr += month(t);
+		dateTimeStr += "-";
+		dateTimeStr += (day(t) < 10) ? "0" : "";
+		dateTimeStr += day(t);
+		dateTimeStr += " ";
+		dateTimeStr += (hour(t) < 10) ? "0" : "";
+		dateTimeStr += hour(t);
+		dateTimeStr += ":";
+		dateTimeStr += (minute(t) < 10) ? "0" : "";
+		dateTimeStr += minute(t);
+		dateTimeStr += ":";
+		dateTimeStr += (second(t) < 10) ? "0" : "";
+		dateTimeStr += second(t);
+
+		return dateTimeStr;
 	}
 }

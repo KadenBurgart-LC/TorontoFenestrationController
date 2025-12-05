@@ -16,6 +16,7 @@ When including other files, please explain what they are and what they do.
 
 #include <stdint.h>
 #include <Stream.h>
+#include <Arduino.h>
 
 namespace HAL {
 	enum class DigitalOutput {
@@ -93,7 +94,11 @@ namespace HAL {
 	   Returns true if we don't notice a problem (fail to open the file). */
 	bool SD_AppendFile(char* dataToAppend, char* filePath);
 
-	
+	/* A function to set the date and time on the RTC that DOESN'T SUCK FERMENTED ASSHOLE */
+	void RTC_SetDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+
+	/* A function to recall the current date and time from the Real-Time Clock */
+	String RTC_GetDateTime();
 }
 
 #endif
