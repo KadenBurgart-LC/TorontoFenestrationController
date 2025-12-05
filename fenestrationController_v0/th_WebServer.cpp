@@ -104,9 +104,13 @@ namespace {
 			} else lib_Eth::respond_405(client, F("This method only accepts GET requests."));
 		}
 
+		// Asynchronous terminal task with callback response to WebApp
 		void G_wExample_button(EthernetClient& client, lib_Eth::HttpMsg& message){
+			/* This shows a more advanced feature of this architecture by initiating a terminal async task that
+			   turns the CPU LED blue for a few seconds, then turns it green again. The client doesn't get their
+			   success message until the async task inidcates that it's done. */
+
 			kernel.StartTerminalAsyncTask(th_test::thread, [client](int8_t result) mutable {
-				Serial.println("\n\n\nDONE asdfadsafsdfasdfadsfasdfasdfasd\n\n\n");
 				if(result == 1) lib_Eth::respond_text(client, F("SUCCESS!"));
 				else lib_Eth::respond_text(client, F("FAIL!"));
 			});
@@ -141,8 +145,9 @@ namespace {
 					jsonResponse[key] = liveDataKeyValueFetcher(key);
 				}
 
-				lib_Eth::respond_json(client, ""); // send JSON headers
+				lib_Eth::respond_json(client, "", 200, "OK", false); // send JSON headers without terminating the connection
 				serializeJson(jsonResponse, client);
+				lib_Eth::closeConnection(client); // now we close the connection manually.
 			}
 			else lib_Eth::respond_405(client, F("The live data packet request endpoint only accepts POST requests."));
 		}

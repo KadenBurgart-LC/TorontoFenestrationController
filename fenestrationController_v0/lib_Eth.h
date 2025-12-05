@@ -69,14 +69,13 @@ namespace lib_Eth {
 		}
 	};
 
-	
+
 	inline void closeConnection(EthernetClient& client){
 		delay(1);
 		client.stop();
 	}
 
-	/* Respond to a client request with a text packet
-	 */
+	/* Respond to a client request with a text packet */
 	inline void respond_text(EthernetClient& client, const String& text, int code = 200, String reason = "OK", bool terminate = true){
 		client.print(F("HTTP/1.1 "));
 		client.print(code);
@@ -88,7 +87,6 @@ namespace lib_Eth {
 		client.print(text);
 		if(terminate)closeConnection(client);
 	}
-
 	inline void respond_json(EthernetClient& client, const String& json, int code = 200, String reason = "OK", bool terminate = true){
 		client.print(F("HTTP/1.1 "));
 		client.print(code);
@@ -100,7 +98,6 @@ namespace lib_Eth {
 		client.print(json);
 		if(terminate)closeConnection(client);
 	}
-
 	inline void respond_404(EthernetClient& client, bool terminate = true){
 		client.println(F("HTTP/1.1 404 Not Found"));
 		client.println(F("Content-Type: text/plain"));
@@ -109,7 +106,6 @@ namespace lib_Eth {
 		client.println(F("404 Not Found: The requested resource does not exist."));
 		if(terminate)closeConnection(client);
 	}
-
 	inline void respond_405(EthernetClient& client, const String& info = F("The requested resource does not exist."), bool terminate = true){
 		client.println(F("HTTP/1.1 404 Not Found"));
 		client.println(F("Content-Type: text/plain"));
@@ -119,7 +115,6 @@ namespace lib_Eth {
 		client.println(info);
 		if(terminate)closeConnection(client);
 	}
-
 	inline void respond_400(EthernetClient& client, const String& info = F("The server could not understand the request."), bool terminate = true){
 		client.println(F("HTTP/1.1 400 Bad Request"));
 		client.println(F("Content-Type: text/plain"));
