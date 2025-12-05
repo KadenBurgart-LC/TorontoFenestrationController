@@ -2,6 +2,7 @@
 
 var toggleClickHandler = function(toggle){
     var slider = toggle.find(".slide");
+    var sit = toggle.find(".sit");
     var w = slider.closest(".widget");
     var refreshImage = w.find('.refresh>img');
     var id = w.attr('id');
@@ -24,9 +25,14 @@ var toggleClickHandler = function(toggle){
               data: { setTo: 1 }
             }).done(function(data){
               if(data == "1") slider.animate({left: '55px'}, 150, callbackFunction);
-              else slider.animate({left: '15px'}, 150, callbackFunction);
-            })
-            .always(function(){
+              else if (data == "0") slider.animate({left: '15px'}, 150, callbackFunction);
+              
+              slider.removeClass('slideError');
+              sit.removeClass('sitError');
+            }).fail(function(data){
+              slider.addClass('slideError');
+              sit.addClass('sitError');
+            }).always(function(){
               refreshButtonReadyMode(refreshImage);
             });
         });        
@@ -41,7 +47,13 @@ var toggleClickHandler = function(toggle){
               data: { setTo: 0 }
             }).done(function(data){
               if(data == "1") slider.animate({left: '55px'}, 150, callbackFunction);
-              else slider.animate({left: '15px'}, 150, callbackFunction);
+              else if (data == "0") slider.animate({left: '15px'}, 150, callbackFunction);
+              
+              slider.removeClass('slideError');
+              sit.removeClass('sitError');
+            }).fail(function(data){
+              slider.addClass('slideError');
+              sit.addClass('sitError');
             })
             .always(function(){
               refreshButtonReadyMode(refreshImage);

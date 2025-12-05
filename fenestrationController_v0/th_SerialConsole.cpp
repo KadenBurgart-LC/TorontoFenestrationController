@@ -183,7 +183,9 @@ namespace th_SerialConsole{
     console.AddCommand("sdappend", c_SD_append, "Append data to a file.\nsdappend <filePath> <dataToAppend>\nNote that there can't be spaces in the string, since that's the argument delimiter!");
   }
 
-  void tick(){
+  int8_t tick(){
     console.Listen();
+
+    return 0; // Tell OSBos to keep running
   }
 }

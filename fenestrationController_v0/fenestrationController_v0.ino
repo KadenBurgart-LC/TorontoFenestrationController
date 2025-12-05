@@ -80,6 +80,7 @@
 #include "th_Blink.h"                   // A simple thread to blink an LED
 #include "th_SerialConsole.h"           // Code relating to the serial console thread | WARNING: This is bypassing the HAL right now, using the Arduino Serial library AND digital outputs.
 #include "th_WebServer.h"               // Code relating to the web server thread | WARNING: This is bypassing the HAL right now, using the Arduino Ethernet library.
+#include "th_test.h"                    // Making this to test a terminal async task with the webServer
 //#include "th_DataLogger.h"              // Code relating to the data logging thread, which reads the state of the machine and saves to SD card and such
 
 // Help us keep track of what version of the code is running
@@ -88,40 +89,24 @@
 #define PROGRAM_NAME "fenestrationController"
 #define PROGRAM_STAMP "\n\n" PROGRAM_NAME "_" PROGRAM_VERSION " (" PROGRAM_VERSION_DATE ")\nBuild date: " __DATE__ " " __TIME__ "\n"
 
-// Help us keep track of what threads we are running
-#define T_BLINK_TEST 0
-#define T_CONSOLE 1
-#define T_WEBSVR 2
-
 // This is the key tool that manages all of our multithreading
-OSBos* kernel;
+OSBos kernel(10);
 
 void setup() {
   HAL::init_Serial();
   Serial.println(PROGRAM_STAMP);  
-
   HAL::init_CPU();
   HAL::init_P1Slots();
 
   th_SerialConsole::initialize();
   th_WebServer::initialize();
-
-  // set up an OSBos kernel with capacity for a certain number of threads
-  kernel = new OSBos(10);
   
-  kernel->Threads[T_BLINK_TEST]->RootMethod = th_Blink::tick;
-  kernel->Threads[T_BLINK_TEST]->Active = true;
-  kernel->Threads[T_BLINK_TEST]->ReadyPeriod_ms = 1000;
-
-  kernel->Threads[T_CONSOLE]->RootMethod = th_SerialConsole::tick;
-  kernel->Threads[T_CONSOLE]->Active = true;
-  kernel->Threads[T_CONSOLE] ->ReadyPeriod_ms = 400;
-
-  kernel->Threads[T_WEBSVR]->RootMethod = th_WebServer::tick;
-  kernel->Threads[T_WEBSVR]->Active = true;
-  kernel->Threads[T_WEBSVR]->ReadyPeriod_ms = 100;
+  kernel.AddThread(th_Blink::thread);
+  kernel.AddThread(th_SerialConsole::thread);
+  kernel.AddThread(th_WebServer::thread);
+  kernel.AddThread(th_test::thread);
 }
 
 void loop() {
-  kernel->RunKernel();
+  kernel.RunKernel();
 }

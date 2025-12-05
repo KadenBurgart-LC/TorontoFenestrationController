@@ -4,18 +4,16 @@
 
 // Private members
 namespace {
-	unsigned int blinkHalfPeriod_ms = 1000;
-	unsigned long lastAction_ms = 0;
 	bool currentState = false;
 }
 
 // Public members
 namespace th_Blink {
-	void tick(){
+	int8_t tick(){
 		currentState = !currentState;
 
 		HAL::setDigitalOutput(HAL::DigitalOutput::YELLOW_LED, currentState);
+
+		return 0;
 	}
 }
-
-

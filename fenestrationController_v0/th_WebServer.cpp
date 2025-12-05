@@ -1,7 +1,12 @@
 #include "th_WebServer.h"
 
-#include "lib_EthToolbelt.h"
+#include "lib_Eth.h"
 #include <ArduinoJson.h>		// Downloaded and installed through the Arduino IDE. Author: Benoit Blanchon. Version 7.4.2 installed.
+#include "th_test.h"
+#include "lib_OSBos.h"
+
+extern OSBos kernel;
+extern Thread th_test::thread;
 
 // Private members
 namespace {
@@ -13,7 +18,7 @@ namespace {
 	const uint8_t LIVE_DATA_JSON_RESP_BUFFER_SIZE = 500;
 	
 	EthernetServer EthSvr(80);
-	lib_EthToolbelt::EthernetButler Jarvis(EthSvr);
+	lib_Eth::EthernetButler Jarvis(EthSvr);
 
 	bool ExampleAlarmToggleThingy = false;
 
@@ -24,7 +29,7 @@ namespace {
 		else return String("NOT FOUND");
 	}
 
-	namespace routeHandlers {
+	namespace routes {
 		/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!     HTTP ROUTING HANDLERS     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		 * 
 		 * These methods are run when the client requests specific paths in their HTTP method.
@@ -45,67 +50,75 @@ namespace {
 		 *	          are coming from a widget with ID "wLogLine".
 		 */
 
-		void index(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
-			lib_EthToolbelt::respond_text(client, F("This server cannot currently supply its own web app. The web app must be downloaded from https://github.com/KadenBurgart-LC/TorontoFenestrationController/tree/main/UI_Webpage"));
+		void index(EthernetClient& client, lib_Eth::HttpMsg& message){
+			lib_Eth::respond_text(client, F("This server cannot currently supply its own web app. The web app must be downloaded from https://github.com/KadenBurgart-LC/TorontoFenestrationController/tree/main/UI_Webpage"));
 		}
 
 		// Example smart-short-value handler
-		void G_wExample_smartShortValue(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
-			if(message.Method == lib_EthToolbelt::REQ_TYPE::GET) lib_EthToolbelt::respond_text(client, String(millis()));
-			else lib_EthToolbelt::respond_405(client, F("smart-short-value widgets only accept GET requests."));
+		void G_wExample_smartShortValue(EthernetClient& client, lib_Eth::HttpMsg& message){
+			if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, String(millis()));
+			else lib_Eth::respond_405(client, F("smart-short-value widgets only accept GET requests."));
 		}
 
 		// Example toggle handler (turns on and off the example alarm)
-		void GP_wExample_toggle(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
-			if(message.Method == lib_EthToolbelt::REQ_TYPE::POST){
+		void GP_wExample_toggle(EthernetClient& client, lib_Eth::HttpMsg& message){
+			if(message.Method == lib_Eth::REQ_TYPE::POST){
 				if(message.Body == "setTo=1"){
 					ExampleAlarmToggleThingy = true;
-					lib_EthToolbelt::respond_text(client, String("1"));
+					lib_Eth::respond_text(client, String("1"));
 				}
 				else {
 					ExampleAlarmToggleThingy = false;
-					lib_EthToolbelt::respond_text(client, String("0"));
+					lib_Eth::respond_text(client, String("0"));
 				}
 			}
-			else if(message.Method == lib_EthToolbelt::REQ_TYPE::GET){
-				lib_EthToolbelt::respond_text(client, String((int)ExampleAlarmToggleThingy));
+			else if(message.Method == lib_Eth::REQ_TYPE::GET){
+				lib_Eth::respond_text(client, String((int)ExampleAlarmToggleThingy));
 			}
-			else lib_EthToolbelt::respond_405(client, F("toggle widgets only accept GET or PUT requests."));
+			else lib_Eth::respond_405(client, F("toggle widgets only accept GET or PUT requests."));
 		}
 
 		// Example value-sender handler
-		void GP_wExample_valueSender(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
+		void GP_wExample_valueSender(EthernetClient& client, lib_Eth::HttpMsg& message){
 			static float myVal = 0;
 
-			if(message.Method == lib_EthToolbelt::REQ_TYPE::POST){
+			if(message.Method == lib_Eth::REQ_TYPE::POST){
 				myVal = atof(message.Body.c_str()+6); // value=###   <-- the value part is 6 chars long
-				lib_EthToolbelt::respond_text(client, String(myVal));
+				lib_Eth::respond_text(client, String(myVal));
 			}
-			else if(message.Method == lib_EthToolbelt::REQ_TYPE::GET) lib_EthToolbelt::respond_text(client, String(myVal));
-			else lib_EthToolbelt::respond_405(client, F("value-sender widgets only accept GET or PUT requests."));
+			else if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, String(myVal));
+			else lib_Eth::respond_405(client, F("value-sender widgets only accept GET or PUT requests."));
 		}
 
 		// Example alarm handler (the example toggle turns the alarm on and off)
-		void G_wExample_alarm(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
-			if(message.Method == lib_EthToolbelt::REQ_TYPE::GET){
-				lib_EthToolbelt::respond_text(client, String((int)ExampleAlarmToggleThingy));
+		void G_wExample_alarm(EthernetClient& client, lib_Eth::HttpMsg& message){
+			if(message.Method == lib_Eth::REQ_TYPE::GET){
+				lib_Eth::respond_text(client, String((int)ExampleAlarmToggleThingy));
 			}
-			else lib_EthToolbelt::respond_405(client, F("alarm widgets only accept GET requests."));
+			else lib_Eth::respond_405(client, F("alarm widgets only accept GET requests."));
 		}
 
-		void G_wExample_liveShortValue(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
-			if(message.Method == lib_EthToolbelt::REQ_TYPE::GET){
-				lib_EthToolbelt::respond_text(client, (String("LSV:") + String(millis()/100%100)));
-			} else lib_EthToolbelt::respond_405(client, F("This method only accepts GET requests."));
+		void G_wExample_liveShortValue(EthernetClient& client, lib_Eth::HttpMsg& message){
+			if(message.Method == lib_Eth::REQ_TYPE::GET){
+				lib_Eth::respond_text(client, (String("LSV:") + String(millis()/100%100)));
+			} else lib_Eth::respond_405(client, F("This method only accepts GET requests."));
+		}
+
+		void G_wExample_button(EthernetClient& client, lib_Eth::HttpMsg& message){
+			kernel.StartTerminalAsyncTask(th_test::thread, [client](int8_t result) mutable {
+				Serial.println("\n\n\nDONE asdfadsafsdfasdfadsfasdfasdfasd\n\n\n");
+				if(result == 1) lib_Eth::respond_text(client, F("SUCCESS!"));
+				else lib_Eth::respond_text(client, F("FAIL!"));
+			});
 		}
 
 		// The client UI requests live data in a packet each second. It asks us for certain values, and we give it those specific values.
-		void P_liveDataPacketRequest(EthernetClient& client, lib_EthToolbelt::HttpMessage& message){
+		void P_liveDataPacketRequest(EthernetClient& client, lib_Eth::HttpMsg& message){
 			// This function expects a stringified JSON array of keys that looks like...
 			// ["key1","key2","key3",...]
 			// The JSON array is parsed using the ArduinoJson library.
 
-			if(message.Method == lib_EthToolbelt::REQ_TYPE::POST){
+			if(message.Method == lib_Eth::REQ_TYPE::POST){
 				const size_t JsonInputDocCapacity = JSON_ARRAY_SIZE(LIVE_DATA_MAX_NUM_FIELDS) + LIVE_DATA_JSON_KEY_BUFFER_SIZE;
 				StaticJsonDocument<JsonInputDocCapacity> jsonDoc;
 
@@ -114,7 +127,7 @@ namespace {
 				if(err){
 					Serial.print(F("ERROR: th_WebServer: Live data packet request: Failed to deserialize JSON array: "));
 					Serial.println(err.f_str());
-					lib_EthToolbelt::respond_400(client, F("Invalid JSON formatting"));
+					lib_Eth::respond_400(client, F("Invalid JSON formatting"));
 					return;
 				}
 
@@ -128,10 +141,22 @@ namespace {
 					jsonResponse[key] = liveDataKeyValueFetcher(key);
 				}
 
-				lib_EthToolbelt::respond_json(client, ""); // send JSON headers
+				lib_Eth::respond_json(client, ""); // send JSON headers
 				serializeJson(jsonResponse, client);
 			}
-			else lib_EthToolbelt::respond_405(client, F("The live data packet request endpoint only accepts POST requests."));
+			else lib_Eth::respond_405(client, F("The live data packet request endpoint only accepts POST requests."));
+		}
+
+		// Negative pressure toggle widget
+		void P_wNegativePressure(EthernetClient& client, lib_Eth::HttpMsg& message){
+			if(message.Body == "setTo=1"){
+
+			} else if(message.Body == "setTo = 0"){
+
+			}
+			else {
+
+			}
 		}
 
 		/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   / HTTP ROUTING HANDLERS     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
@@ -156,19 +181,22 @@ namespace th_WebServer{
 			Serial.println(Ethernet.localIP());
 		}
 
-		Jarvis.On("/", routeHandlers::index);
-		Jarvis.On("/w/wExample_smartShortValue", routeHandlers::G_wExample_smartShortValue);
-		Jarvis.On("/w/wExample_valueSender", routeHandlers::GP_wExample_valueSender);
-		Jarvis.On("/w/wExample_toggle", routeHandlers::GP_wExample_toggle);
-		Jarvis.On("/w/wExample_alarm", routeHandlers::G_wExample_alarm);
-		Jarvis.On("/w/wExample_liveShortValue", routeHandlers::G_wExample_liveShortValue);
-		Jarvis.On("/liveDataPacketRequest", routeHandlers::P_liveDataPacketRequest);
+		Jarvis.On("/", routes::index);
+		Jarvis.On("/w/wExample_smartShortValue", routes::G_wExample_smartShortValue);
+		Jarvis.On("/w/wExample_valueSender", routes::GP_wExample_valueSender);
+		Jarvis.On("/w/wExample_toggle", routes::GP_wExample_toggle);
+		Jarvis.On("/w/wExample_alarm", routes::G_wExample_alarm);
+		Jarvis.On("/w/wExample_liveShortValue", routes::G_wExample_liveShortValue);
+		Jarvis.On("/w/wExample_button", routes::G_wExample_button);
+		Jarvis.On("/liveDataPacketRequest", routes::P_liveDataPacketRequest);
 	}
 
 	/* Check and see if client requests have come in. Read the requests. Grab the requested path.
 	 * Use the path to route to an appropriate action and respond.
 	 */
-	void tick(){
+	int8_t tick(){
 		Jarvis.Serve();
+
+		return 0; // Tell OSBos to keep running
 	}
 }

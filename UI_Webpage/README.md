@@ -13,6 +13,12 @@ The ID of a widget is used to generate the PATH for the HTTP messages of the AJA
 
 ## Types of widgets
 
+### Button widgets
+These widgets do something when you click on them. There is a dataField next to the button so that the computer can provide feedback on the action it's trying to perform.
+
+### Smart-label-value widgets
+These are just like smart-short-value widgets except the layout is different; the label gets the little field to the left and the data gets the bigger field to the right. The refresh button also goes on the right.
+
 ### Live-short-value widgets
 These widgets provide fields are used to display things like live sensor values that don't take up too many characters and need to be updated once per second.
 These widgets have...

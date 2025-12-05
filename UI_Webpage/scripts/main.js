@@ -98,9 +98,9 @@ var testLiveDataSubscriber = function(data){
   testData = data;
 }
 
-subscribeToLiveDataRequester("test", testLiveDataSubscriber);
+//subscribeToLiveDataRequester("test", testLiveDataSubscriber);
 //subscribeToLiveDataRequester("wExample_liveShortValue", testLiveDataSubscriber);
-subscribeToLiveDataRequester("millis", testLiveDataSubscriber);
+//subscribeToLiveDataRequester("millis", testLiveDataSubscriber);
 
 var pingServer = function(){
   $.get(rootUrl,

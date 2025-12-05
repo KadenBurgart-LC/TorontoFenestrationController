@@ -59,6 +59,11 @@ namespace HAL {
 	// WARNING: The LED is very bright. You probably don't want to turn it up higher than 10/255.
 	void set_C0_1_RgbLed(uint8_t R, uint8_t G, uint8_t B);
 
+	// Set the RGB LED to our "Ready" colour
+	inline void set_C0_1_RgbLed_ReadySignal(){
+		set_C0_1_RgbLed(1, 4, 0);
+	}
+
 	/* Print out all entries in a particular directory on the SD card.
        This function takes in any stream, so we can use the Serial interface or the web client. */
 	void SD_PrintDirectory(Stream& printer, char* dir);
@@ -87,6 +92,8 @@ namespace HAL {
 	/* Add to a file on the SD card. Mostly for logging. 
 	   Returns true if we don't notice a problem (fail to open the file). */
 	bool SD_AppendFile(char* dataToAppend, char* filePath);
+
+	
 }
 
 #endif

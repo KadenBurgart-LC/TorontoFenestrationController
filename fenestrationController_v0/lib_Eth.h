@@ -12,7 +12,7 @@ namespace {
 	bool PRINT_INCOMING_PATHS = false;
 }
 
-namespace lib_EthToolbelt {
+namespace lib_Eth {
 	enum class REQ_TYPE {
 		GET,		// GET requests data from the server
 		POST,		// POST sends data to the server
@@ -21,12 +21,12 @@ namespace lib_EthToolbelt {
 		ERROR
 	};
 
-	struct HttpMessage {
+	struct HttpMsg {
 		REQ_TYPE 		Method;
 		String			Path;
 		String			Body;
 
-		HttpMessage(const String& rawMessage) {
+		HttpMsg(const String& rawMessage) {
 			int endOfFirstLine = rawMessage.indexOf('\n');
 			if(endOfFirstLine == -1) return; // Basic error check
 
@@ -69,9 +69,15 @@ namespace lib_EthToolbelt {
 		}
 	};
 
+	
+	inline void closeConnection(EthernetClient& client){
+		delay(1);
+		client.stop();
+	}
+
 	/* Respond to a client request with a text packet
 	 */
-	inline void respond_text(EthernetClient& client, const String& text, int code = 200, String reason = "OK"){
+	inline void respond_text(EthernetClient& client, const String& text, int code = 200, String reason = "OK", bool terminate = true){
 		client.print(F("HTTP/1.1 "));
 		client.print(code);
 		client.print(" ");
@@ -80,9 +86,10 @@ namespace lib_EthToolbelt {
 		client.println(F("Access-Control-Allow-Origin: *"));
 		client.println();
 		client.print(text);
+		if(terminate)closeConnection(client);
 	}
 
-	inline void respond_json(EthernetClient& client, const String& json, int code = 200, String reason = "OK"){
+	inline void respond_json(EthernetClient& client, const String& json, int code = 200, String reason = "OK", bool terminate = true){
 		client.print(F("HTTP/1.1 "));
 		client.print(code);
 		client.print(" ");
@@ -91,39 +98,42 @@ namespace lib_EthToolbelt {
 		client.println(F("Access-Control-Allow-Origin: *"));
 		client.println();
 		client.print(json);
+		if(terminate)closeConnection(client);
 	}
 
-	inline void respond_404(EthernetClient& client){
+	inline void respond_404(EthernetClient& client, bool terminate = true){
 		client.println(F("HTTP/1.1 404 Not Found"));
 		client.println(F("Content-Type: text/plain"));
 		client.println(F("Access-Control-Allow-Origin: *"));
 		client.println();
 		client.println(F("404 Not Found: The requested resource does not exist."));
+		if(terminate)closeConnection(client);
 	}
 
-	inline void respond_405(EthernetClient& client, const String& info = F("The requested resource does not exist.")){
+	inline void respond_405(EthernetClient& client, const String& info = F("The requested resource does not exist."), bool terminate = true){
 		client.println(F("HTTP/1.1 404 Not Found"));
 		client.println(F("Content-Type: text/plain"));
 		client.println(F("Access-Control-Allow-Origin: *"));
 		client.println();
 		client.print(F("404 Not Found: "));
 		client.println(info);
+		if(terminate)closeConnection(client);
 	}
 
-	inline void respond_400(EthernetClient& client, const String& info = F("The server could not understand the request.")){
+	inline void respond_400(EthernetClient& client, const String& info = F("The server could not understand the request."), bool terminate = true){
 		client.println(F("HTTP/1.1 400 Bad Request"));
 		client.println(F("Content-Type: text/plain"));
 		client.println(F("Access-Control-Allow-Origin: *"));
 		client.println();
 		client.print(F("400 Bad Request: "));
 		client.println(info);
+		if(terminate)closeConnection(client);
 	}
 
 
 
-
 	// The structure of request handler functions to go in the EthernetButler routing table
-	using RequestHandler = std::function<void(EthernetClient& client, HttpMessage& message)>;
+	using RequestHandler = std::function<void(EthernetClient& client, HttpMsg& message)>;
 
 	class EthernetButler {
 	private:
@@ -156,7 +166,7 @@ namespace lib_EthToolbelt {
 			    	Serial.println(messageStr);
 			    }
 
-			    HttpMessage message(messageStr);
+			    HttpMsg message(messageStr);
 
 			    if(PRINT_INCOMING_PATHS){
 			    	Serial.print("HTTP Message incoming for path: ");
@@ -167,9 +177,6 @@ namespace lib_EthToolbelt {
 					_routes[message.Path](client, message);
 				}
 				else respond_404(client);
-
-				delay(1);
-				client.stop();
 			}
 		}
 	};

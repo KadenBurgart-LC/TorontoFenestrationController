@@ -80,11 +80,50 @@ div {
   font-weight: bold;
   text-align: center;
 }
+.widget .label-value .dataField {
+  grid-column: 2 / span 2;
+}
 .widget .label-value .dataField > input {
   text-align: left;
   width: 98%;
 }
 
+
+
+
+
+.widget .smart-label-value {
+  display: grid;
+  grid-template-columns: 145px 1fr 35px;
+}
+.widget .smart-label-value .dataField > input {
+  width: 98%;
+}
+.widget .smart-label-value .label {
+  padding: 9px 0 0 5px;
+  font-weight: bold;
+  text-align: center;
+}
+
+
+
+
+.widget .button {
+  display: grid;
+  grid-template-columns: 180px 1fr 35px;
+}
+.widget .button .buttonDiv {
+  text-align: center;
+  font-weight: bold;
+  padding: 9px 0px 0px 0px;
+  background-color: #DDE;
+}
+.widget .button .hover {
+  background-color: #BBC;
+}
+.widget .button .dataField > input {
+  width: 98%;
+}
 
 
 
@@ -134,6 +173,12 @@ div {
   background-repeat: no-repeat;
   background-position: center;
 }
+.widget .toggleSlider .sitError {
+  background-color: #B99;
+}
+.widget .toggle .slideError {
+  background-color: #ECC;
+}
 
 
 
@@ -175,6 +220,11 @@ div {
   grid-template-columns: 35px 35px 1fr;
 }
 
+.loader > img {
+  margin: 5px 0 0 5px;
+  width: 24px;
+  height: 24
+}
 
 .refresh > img {
   margin: 5px 0 0 5px;

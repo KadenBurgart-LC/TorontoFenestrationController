@@ -81,7 +81,7 @@ namespace HAL {
 
 		/* Turn the RGB LED green
 		   Note: The LED is very bright. No need to blind yourself. Turn it up to 255 if you are really mad at the Toronto people. */
-		set_C0_1_RgbLed(1, 4, 0);
+		set_C0_1_RgbLed_ReadySignal();
 
 		/* Initialize the SD card module within the CPU.
 		   The documentation for the P1AM-200 says that the chip select pin is stored in SDCARD_SS_PIN */	
