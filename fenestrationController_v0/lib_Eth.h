@@ -8,8 +8,8 @@
 #include <map>			// standard c++ library
 
 namespace {
-	bool PRINT_INCOMMING_REQUESTS = true;
-	bool PRINT_INCOMING_PATHS = false;
+	bool PRINT_INCOMMING_REQUESTS = false;
+	bool PRINT_INCOMING_PATHS = true;
 }
 
 namespace lib_Eth {

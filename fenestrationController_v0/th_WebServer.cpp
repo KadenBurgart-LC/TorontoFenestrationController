@@ -4,9 +4,12 @@
 #include <ArduinoJson.h>		// Downloaded and installed through the Arduino IDE. Author: Benoit Blanchon. Version 7.4.2 installed.
 #include "th_test.h"
 #include "lib_OSBos.h"
+#include "th_MechanicalActions.h"
 
 extern OSBos kernel;
 extern Thread th_test::thread;
+
+namespace th_MechanicalActions { extern Thread task_STOP_ALL; }
 
 // Private members
 namespace {
@@ -26,6 +29,11 @@ namespace {
 	String liveDataKeyValueFetcher(const char* key){
 		if(strcmp(key, "millis") == 0) return String(millis());
 		else if (strcmp(key, "wExample_liveShortValue") == 0) return (String("LSV: ") + String(millis()/100%100));
+		else if (strcmp(key, "wLowPressure") == 0) return "NO HAL";
+		else if (strcmp(key, "wMedPressure") == 0) return "NO HAL";
+		else if (strcmp(key, "wHighPressure") == 0) return "NO HAL";
+		else if (strcmp(key, "wDisplacement1") == 0) return "NO HAL";
+		else if (strcmp(key, "wDisplacement2") == 0) return "NO HAL";
 		else return String("NOT FOUND");
 	}
 
@@ -168,6 +176,18 @@ namespace {
 			}
 		}
 
+		void G_RTC(EthernetClient& client, lib_Eth::HttpMsg& message){
+			if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, HAL::RTC_GetDateTime());
+			else lib_Eth::respond_405(client, "There is currently no mechanism for setting the RTC through the web server. Must use the SerialConsole.");
+		}
+
+		void G_wSTOP_ALL(EthernetClient& client, lib_Eth::HttpMsg& message){
+			kernel.StartTerminalAsyncTask(th_MechanicalActions::task_STOP_ALL, [client](int8_t result) mutable {
+				if(result == 1) lib_Eth::respond_text(client, F("All functions halted"));
+				else lib_Eth::respond_text(client, F("ERROR"));
+			});
+		}
+
 		/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   / HTTP ROUTING HANDLERS     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 	}
 }
@@ -197,6 +217,11 @@ namespace th_WebServer{
 		Jarvis.On("/w/wExample_alarm", routes::G_wExample_alarm);
 		Jarvis.On("/w/wExample_liveShortValue", routes::G_wExample_liveShortValue);
 		Jarvis.On("/w/wExample_button", routes::G_wExample_button);
+		Jarvis.On("/w/wExample_smartLabelValue", routes::G_wExample_smartLabelValue);
+
+		Jarvis.On("/w/wSTOP_ALL", routes::G_wSTOP_ALL);
+		Jarvis.On("/w/wRTC", routes::G_RTC);
+
 		Jarvis.On("/liveDataPacketRequest", routes::P_liveDataPacketRequest);
 	}
 

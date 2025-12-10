@@ -158,9 +158,18 @@ The HTML for a value-sender widget looks like this...
 </div>
 ```
 
-### Smart-medium-value widgets
+### Smart-label-value widgets
 These behave the same way as smart-short-value widgets, except the label goes in the little field on the left, and the data goes in the bigger field on the right. Also, the refresh button goes on the right hand side.
 
+```html
+<div class="example widget" id="wExample_valueSender">
+  <div class="smart-label-value">
+    <div class="label">Label Value</div>
+    <div class="dataField"><input type="text" /></div>
+    <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+  </div>
+</div>
+```
 
 ### Alarm widgets
 Alarm widgets let us know if there are any errors showing on the Fenestration Wall controller.

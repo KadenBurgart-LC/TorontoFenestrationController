@@ -83,6 +83,12 @@ var liveDataRequester_TimerEventHandler = function(){
 
 var liveDataRequester_TimerEvent = setInterval(liveDataRequester_TimerEventHandler, 1000);
 
+function rtcUpdater_TimerEventHandler(){
+  $('#wRTC').find('.refresh>img').trigger('click');
+}
+
+var rtcUpdater_TimerEvent = setInterval(rtcUpdater_TimerEventHandler, 30000);
+
 /*  *****     *****     *****     ***** /PAGE UPDATE INTERVALS  *****     *****     *****     *****  */
 
 

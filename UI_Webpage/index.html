@@ -3,8 +3,8 @@
 <html>
   <head>
     <title>Fenestration Test Panel</title>
-    <script src="./scripts/d3.v4.min.js"></script>
-    <script src="./scripts/jquery-3.7.1.min.js"></script>
+    <script src="./scripts/lib_d3.v4.min.js"></script>
+    <script src="./scripts/lib_jquery-3.7.1.min.js"></script>
 
     <link rel="stylesheet" href="./style/style.css">
 
@@ -16,7 +16,7 @@
       <div id="mainGrid">
         <div class="titleBlock"><center>Fenestration Test Panel - Control Console<center></div>  
             
-        <div class="example widget" id="wExample_liveShortValue">
+        <!-- <div class="example widget" id="wExample_liveShortValue">
           <div class="live-short-value">
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
             <div class="dataField"><input type="text" disabled="" /></div>
@@ -72,21 +72,35 @@
             <div class="loader"><img src="./assets/Ready.png"/></div>
           </div>
         </div>
-        <div class="example widget" id="wExample_valueSender">
+        <div class="example widget" id="wExample_smartLabelValue">
           <div class="smart-label-value">
             <div class="label">Label Value</div>
             <div class="dataField"><input type="text" /></div>
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
           </div>
+        </div> -->
+
+
+
+
+
+
+
+        <div class="widget" id="wSTOP_ALL">
+          <div class="button">
+            <div class="buttonDiv">STOP ALL</div>
+            <div class="dataField"><input type="text" disabled="" /></div>
+            <div class="loader"><img src="./assets/Ready.png"/></div>
+          </div>
         </div>
-
-
-
-
-
-
-
-
+        <div class="widget" id="wTargetPressure">
+          <div class="value-sender">
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="dataField"><input type="text" /></div>
+            <div class="send"><img src="./assets/Send.png"/></div>
+            <div class="label">Target Pressure (Pa)</div>
+          </div>
+        </div>
 
         <div class="widget" id="wCurrentAction">
           <div class="label-value">
@@ -99,41 +113,75 @@
             <div class="label">Timer</div>
             <div class="dataField" style="grid-column: 2 / span 2;"><input type="text" disabled="" /></div>
           </div>
-        </div>    
+        </div>  
 
-        <div class="widget" id="wNegativePressure">
-          <div class="toggle">
-            <div class="refresh"><img src="./assets/Refresh2.png" /></div>
-            <div class="toggleSlider"><center><div class="sit"></div><div class="slide"></div></center></div>
-            <div class="label">Negative Pressure</div>
-          </div>
-        </div>      
-        <div class="widget" id="wPressureDirection">
-          <div class="smart-short-value">
-            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
-            <div class="dataField"><input type="text" disabled="" /></div>
-            <div class="label">Pressure Direction</div>
-          </div>
-        </div>
-
-        <div class="widget" id="wTargetPressure">
-          <div class="value-sender">
-            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+        <div class="widget" id="wRTC">
+          <div class="smart-label-value">
+            <div class="label">Date & Time</div>
             <div class="dataField"><input type="text" /></div>
-            <div class="send"><img src="./assets/Send.png"/></div>
-            <div class="label">Target Pressure (kPa)</div>
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
           </div>
         </div>
-        <div class="widget" id="wCurrentPressure">
+        <div class="widget" id="wLowPressure">
           <div class="live-short-value">
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
             <div class="dataField"><input type="text" disabled="" /></div>
             <div class="go"><img src="./assets/Go.png"/></div>
-            <div class="label">Current Pressure</div>
+            <div class="label">Low Pressure Sensor (Pa)</div>
+          </div>
+        </div>
+
+
+        <div class="widget" id="wMedPressure">
+          <div class="live-short-value">
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
+            <div class="go"><img src="./assets/Go.png"/></div>
+            <div class="label">Medium Pressure Sensor (Pa)</div>
+          </div>
+        </div>
+        <div class="widget" id="wHighPressure">
+          <div class="live-short-value">
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
+            <div class="go"><img src="./assets/Go.png"/></div>
+            <div class="label">High Pressure Sensor (Pa)</div>
+          </div>
+        </div>
+
+        <div class="widget" id="wDisplacement1">
+          <div class="live-short-value">
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
+            <div class="go"><img src="./assets/Go.png"/></div>
+            <div class="label">Displacement Sensor 1 (mm)</div>
+          </div>
+        </div>
+        <div class="widget" id="wDisplacement2">
+          <div class="live-short-value">
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
+            <div class="go"><img src="./assets/Go.png"/></div>
+            <div class="label">Displacement Sensor 2 (mm)</div>
           </div>
         </div>
 
         <div id="LiveGraph"></div>
+
+        <div class="widget" id="wHPvalvesDirection">
+          <div class="toggle">
+            <div class="refresh"><img src="./assets/Refresh2.png" /></div>
+            <div class="toggleSlider"><center><div class="sit"></div><div class="slide"></div></center></div>
+            <div class="label">High Pressure Air (negative left, positive right)</div>
+          </div>
+        </div>      
+        <div class="widget" id="wLPvalvesDirection">
+          <div class="toggle">
+            <div class="refresh"><img src="./assets/Refresh2.png" /></div>
+            <div class="toggleSlider"><center><div class="sit"></div><div class="slide"></div></center></div>
+            <div class="label">Low Pressure Air (negative left, positive right)</div>
+          </div>
+        </div>
 
         <div class="widget" id="wWaterPump">
           <div class="toggle">
@@ -188,4 +236,5 @@
   <script src="./scripts/widgets_toggle.js"></script>
   <script src="./scripts/widgets_alarm.js"></script>
   <script src="./scripts/widgets_button.js"></script>
+  <script src="./scripts/widgets_smart-label-value.js"></script>
 </html>

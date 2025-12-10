@@ -72,7 +72,7 @@ namespace HAL {
 		return DO_States[o];
 	}
 
-	float getAnalogInput(AnalogInputs i){
+	float getAnalogInput(AnalogInput i){
 
 	}
 

@@ -27,7 +27,7 @@ namespace HAL {
 		POSITIVE_PRESSURE
 	};
 
-	enum class AnalogInputs {
+	enum class AnalogInput {
 		PRESSURE_WINDOW_LOW = 0,
 		PRESSURE_WINDOW_MED = 1,
 		PRESSURE_WINDOW_HIGH = 2,
@@ -40,6 +40,24 @@ namespace HAL {
 		VALVE_C7_2 = 9  // leakage system negative blower vent valve feedback signal
 	};
 
+	/* We typically measure analog signals either by voltage or by current.
+	   Some sensor systems give us conversion factors to convert from ADC counts
+	   into volts or amps. Other sensor systems just give us a raw digital value
+	   that converts directly into the measurement units of the sensor.
+	   This enum tells us when an analog sensor signal can be converted to an
+	   intermediate voltage or current, though, which helps a lot with testing
+	   and calibration in some circumstances. */
+	enum class AnalogIntermediateMeasurementType {
+		VOLTAGE, 	// Analog signals that convert to voltage and THEN to the sensor units
+		CURRENT,  	// Analog signals that convert to current and THEN to the sensor units
+		NA 			// Analog signals that convert directly to the measurement units of a sensor
+	};
+
+	struct AnalogSignalDefinition {
+		AnalogIntermediateMeasurementType MeasurementType;
+		float IntermediateMeasurementType_ConversionDenominator;
+	};
+
 	/* Set the state of a digital output device
 	   Returns...
 	     0 - Output successfully turned OFF
@@ -50,7 +68,7 @@ namespace HAL {
 
 	bool getDigitalOutputState(DigitalOutput o, bool state);
 
-	float getAnalogInput(AnalogInputs i);
+	float getAnalogInput(AnalogInput i);
 
 	void init_CPU();
 	void init_Serial();

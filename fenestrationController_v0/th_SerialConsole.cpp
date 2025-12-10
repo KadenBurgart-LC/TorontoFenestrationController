@@ -54,7 +54,6 @@ namespace {
     uint8_t channel = strtol(console.Arguments[2], NULL, 10);
 
     int inputCounts = 0;
-    float inputVolts = 0;
 
     Serial.print("Attempting to read channel ");
     Serial.print(channel);
@@ -66,12 +65,27 @@ namespace {
       (2 < slot && slot < 4) &&
       (0 < channel && channel < 9)
       ){
+      float inputVolts = 0;
+
       inputCounts = P1.readAnalog(slot, channel);
       inputVolts = 10 * ((float)inputCounts / 8191); // Conversion formula from the P1-08ADL-2 documentation
 
       Serial.print("Channel voltage: ");
       Serial.print(inputVolts);
       Serial.println(" V");
+    }
+    else if(
+      (1 < slot && slot < 3) &&
+      (0 < channel && channel < 9)
+      ){
+      float input_mA = 0;
+
+      inputCounts = P1.readAnalog(slot, channel);
+      input_mA = 20 * ((float)inputCounts / 8191); // Conversion formula from the P1-08ADL-1 documentation
+
+      Serial.print("Channel current: ");
+      Serial.print(input_mA);
+      Serial.println(" mA");
     }
     else{
       Serial.println("Invalid slot or channel.");

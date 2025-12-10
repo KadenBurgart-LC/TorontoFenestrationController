@@ -21,6 +21,8 @@ var buttonClickHandler = function(buttonDiv){
 
 	loaderLoadingMode(loaderImg);
 
+	textField.val("... ... ...");
+
 	$.get(rootUrl + '/w/' + id,
 		function(data){
 			textField.val(data);
