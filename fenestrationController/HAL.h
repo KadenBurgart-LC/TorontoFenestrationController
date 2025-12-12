@@ -20,24 +20,22 @@ When including other files, please explain what they are and what they do.
 
 namespace HAL {
 	enum class DigitalOutput {
-		STRUCTURAL_BLOWER_POWER = 1,
-		LEAKAGE_BLOWER_POWER = 2,
-		WATER_PUMP_POWER = 3,
-		YELLOW_LED = 4,
-		POSITIVE_PRESSURE
+		STRUCTURAL_BLOWER_POWER,
+		LEAKAGE_BLOWER_POWER,
+		WATER_PUMP_POWER,
+		YELLOW_LED
 	};
 
 	enum class AnalogInput {
-		PRESSURE_WINDOW_LOW = 0,
-		PRESSURE_WINDOW_MED = 1,
-		PRESSURE_WINDOW_HIGH = 2,
-		PRESSURE_LFE_DIFFERENTIAL = 3,
-		PRESSURE_LFE_ABS = 4,
-		DISPLACEMENT_1 = 5,
-		DISPLACEMENT_2 = 6,
-		VALVE_C7_8 = 7, // leakage system cavity vent (main control valve) feedback signal
-		VALVE_C7_1 = 8, // leakage system positive blower vent valve feedback signal
-		VALVE_C7_2 = 9  // leakage system negative blower vent valve feedback signal
+		PRESSURE_WINDOW_LOW,
+		PRESSURE_WINDOW_MED,
+		PRESSURE_WINDOW_HIGH,
+		PRESSURE_LFE_DIFFERENTIAL,
+		DISPLACEMENT_1,
+		DISPLACEMENT_2,
+		VALVE_C7_8, // leakage system cavity vent (main control valve) feedback signal
+		VALVE_C7_1, // leakage system positive blower vent valve feedback signal
+		VALVE_C7_2  // leakage system negative blower vent valve feedback signal
 	};
 
 	/* We typically measure analog signals either by voltage or by current.
@@ -54,8 +52,18 @@ namespace HAL {
 	};
 
 	struct AnalogSignalDefinition {
-		AnalogIntermediateMeasurementType MeasurementType;
-		float IntermediateMeasurementType_ConversionDenominator;
+		AnalogIntermediateMeasurementType MeasurementType = AnalogIntermediateMeasurementType::NA;
+		float IntermediateMeasurementType_ConversionDenominator = 1;
+
+		const char* SignalUnits = "";
+		float SignalUnitGain = 1;
+		float SignalUnitOffset = 0;
+
+		int8_t P1_Slot = -1;
+		int8_t P1_Channel = -1;
+
+		float LastIntermediateValue = 0;
+		float LastSignalUnitValue = 0;
 	};
 
 	/* Set the state of a digital output device
@@ -66,9 +74,9 @@ namespace HAL {
 	 */
 	uint8_t setDigitalOutput(DigitalOutput o, bool state);
 
-	bool getDigitalOutputState(DigitalOutput o, bool state);
+	bool getDigitalOutputState(DigitalOutput o);
 
-	float getAnalogInput(AnalogInput i);
+	float getAnalogInputFloat(AnalogInput i);
 
 	void init_CPU();
 	void init_Serial();

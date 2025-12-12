@@ -75,13 +75,13 @@
       github.com/KadenBurgart-LC/TorontoFenestrationController
 */
 
+#include <OSBos.h>                      // The custom library that acts as our simple kernel https://github.com/actuvon/OSBos
 #include "HAL.h"                        // The hardware abstraction layer. Any code relating to a specific piece of hardware goes through here.
-#include "lib_OSBos.h"                  // The custom library that acts as our simple kernel | WARNING: This is bypassing the HAL right now, using millis() and Serial.
+#include "th_test.h"                    // Making this to test a terminal async task with the webServer
 #include "th_Blink.h"                   // A simple thread to blink an LED
 #include "th_SerialConsole.h"           // Code relating to the serial console thread | WARNING: This is bypassing the HAL right now, using the Arduino Serial library AND digital outputs.
 #include "th_WebServer.h"               // Code relating to the web server thread | WARNING: This is bypassing the HAL right now, using the Arduino Ethernet library.
-#include "th_MechanicalActions.h"       // The business logic of controlling our actuators on the wall
-//#include "th_test.h"                    // Making this to test a terminal async task with the webServer
+#include "MechanicalSystem.h"           // The business logic of controlling our actuators on the wall
 //#include "th_DataLogger.h"              // Code relating to the data logging thread, which reads the state of the machine and saves to SD card and such
 
 // Help us keep track of what version of the code is running
@@ -107,8 +107,8 @@ void setup() {
   kernel.AddThread(th_WebServer::thread);
 
   // Terminal Async Task Initialization
-  kernel.AddThread(th_MechanicalActions::task_STOP_ALL);
-  //kernel.AddThread(th_test::thread);
+  kernel.AddThread(MechanicalSystem::tk_StopAll::Task);
+  kernel.AddThread(th_test::thread);                      // Used for the example button widget
 }
 
 void loop() {

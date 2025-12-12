@@ -17,7 +17,17 @@ The ID of a widget is used to generate the PATH for the HTTP messages of the AJA
 These widgets do something when you click on them. There is a dataField next to the button so that the computer can provide feedback on the action it's trying to perform.
 
 ### Smart-label-value widgets
-These are just like smart-short-value widgets except the layout is different; the label gets the little field to the left and the data gets the bigger field to the right. The refresh button also goes on the right.
+These behave the same way as smart-short-value widgets, except the label goes in the little field on the left, and the data goes in the bigger field on the right. Also, the refresh button goes on the right hand side.
+
+```html
+<div class="example widget" id="wExample_valueSender">
+  <div class="smart-label-value">
+    <div class="label">Label Value</div>
+    <div class="dataField"><input type="text" /></div>
+    <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+  </div>
+</div>
+```
 
 ### Live-short-value widgets
 These widgets provide fields are used to display things like live sensor values that don't take up too many characters and need to be updated once per second.
@@ -154,19 +164,6 @@ The HTML for a value-sender widget looks like this...
     <div class="dataField"><input type="text" /></div>
     <div class="send"><img src="./assets/Send.png"/></div>
     <div class="label">Target Pressure (kPa)</div>
-  </div>
-</div>
-```
-
-### Smart-label-value widgets
-These behave the same way as smart-short-value widgets, except the label goes in the little field on the left, and the data goes in the bigger field on the right. Also, the refresh button goes on the right hand side.
-
-```html
-<div class="example widget" id="wExample_valueSender">
-  <div class="smart-label-value">
-    <div class="label">Label Value</div>
-    <div class="dataField"><input type="text" /></div>
-    <div class="refresh"><img src="./assets/Refresh2.png"/></div>
   </div>
 </div>
 ```

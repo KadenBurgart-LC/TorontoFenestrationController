@@ -1,7 +1,7 @@
 #ifndef THREAD_WEBSERVER
 #define THREAD_WEBSERVER
 
-#include "lib_OSBos.h"
+#include <OSBos.h>      // The custom library that acts as our simple kernel https://github.com/actuvon/OSBos
 
 namespace th_WebServer{
 	// Must run before ticking

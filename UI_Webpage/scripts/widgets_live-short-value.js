@@ -14,7 +14,7 @@ var liveShortValueRefreshHandler = function(refreshImg){
       var id = w.attr('id');
       var textField = w.find('input');
 
-      $.get(rootUrl + '/w/' + id,
+      $.get(rootUrl + '/' + id,
         function(data){
           textField.val(data);
         })

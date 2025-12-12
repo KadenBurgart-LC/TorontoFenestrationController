@@ -20,7 +20,7 @@ var toggleClickHandler = function(toggle){
     if(slider.css("left") == "15px") { 
       slider.animate({left: '35px'}, 150, function(){
           $.ajax({
-              url: rootUrl + '/w/' + id,
+              url: rootUrl + '/' + id,
               type: 'POST',
               data: { setTo: 1 }
             }).done(function(data){
@@ -42,7 +42,7 @@ var toggleClickHandler = function(toggle){
     else { 
       slider.animate({left: '35px'}, 150, function(){
           $.ajax({
-              url: rootUrl + '/w/' + id,
+              url: rootUrl + '/' + id,
               type: 'POST',
               data: { setTo: 0 }
             }).done(function(data){
@@ -72,16 +72,29 @@ var toggleRefreshHandler = function(refreshImg){
     var w = refreshImg.closest('.widget');
     var id = w.attr('id');
     var slide = w.find('.slide');
+    var sit = w.find(".sit");
 
     var callbackFunction = function() { 
         refreshButtonReadyMode(refreshImg);
       };
 
     slide.animate({left: '35px'}, 150, function(){
-      $.get(rootUrl + '/w/' + id,
+      $.get(rootUrl + '/' + id,
         function(data){
-          if(data == "1") slide.animate({left: '55px'}, 150, callbackFunction);
-          else slide.animate({left: '15px'}, 150, callbackFunction);
+          if(data == "1"){
+            slide.animate({left: '55px'}, 150, callbackFunction);
+            slide.removeClass('slideError');
+            sit.removeClass('sitError');
+          }
+          else if(data == "0"){
+            slide.animate({left: '15px'}, 150, callbackFunction);
+            slide.removeClass('slideError');
+            sit.removeClass('sitError');
+          }
+          else {
+              slide.addClass('slideError');
+              sit.addClass('sitError');
+          }
         })
         .always(function(){
           refreshButtonReadyMode(refreshImg);

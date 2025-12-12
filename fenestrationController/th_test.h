@@ -1,7 +1,7 @@
 #ifndef TH_TEST_H
 #define TH_TEST_H
 
-#include "lib_OSBos.h"
+#include <OSBos.h>      // The custom library that acts as our simple kernel https://github.com/actuvon/OSBos
 #include "HAL.h"
 #include "Arduino.h"
 

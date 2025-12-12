@@ -15,7 +15,7 @@ $('.send>img').click(function(){
 
     refreshButtonLoadingMode(refreshImage);
 
-    $.post(rootUrl + '/w/' + id, { 'value': textField.val() })    
+    $.post(rootUrl + '/' + id, { 'value': textField.val() })    
       .done(function(data){
         textField.val(data);
       })  
@@ -36,7 +36,7 @@ var valueSenderRefreshHandler = function(refreshImg){
       var id = w.attr('id');
       var textField = w.find('input');
 
-      $.get(rootUrl + '/w/' + id,
+      $.get(rootUrl + '/' + id,
         function(data){
           textField.val(data);
         })
@@ -50,3 +50,5 @@ var valueSenderRefreshHandler = function(refreshImg){
 
 // Bind the refresh button click to the refresh handler
 $('.value-sender').find('.refresh>img').click(function(){ valueSenderRefreshHandler($(this)); });
+
+

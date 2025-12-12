@@ -1,7 +1,7 @@
 #include "th_SerialConsole.h"
 
 #include "HAL.h"
-#include <SerialConsole.h>  // https://github.com/CeleryMortem/SerialConsole
+#include <SerialConsole.h>  // https://github.com/actuvon/SerialConsole
 #include <P1AM.h>      // The public library for the AutomationDirect controller we are using  https://github.com/facts-engineering/P1AM
 
 // Private members

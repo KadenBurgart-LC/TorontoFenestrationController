@@ -1,15 +1,17 @@
 #include "th_WebServer.h"
 
+#include <OSBos.h>      // The custom library that acts as our simple kernel https://github.com/actuvon/OSBos
 #include "lib_Eth.h"
+#include "lib_Utils.h"
+#include "th_test.h"		    // Used for the example button widget
 #include <ArduinoJson.h>		// Downloaded and installed through the Arduino IDE. Author: Benoit Blanchon. Version 7.4.2 installed.
-#include "th_test.h"
-#include "lib_OSBos.h"
-#include "th_MechanicalActions.h"
+#include "MechanicalSystem.h"
+#include "HAL.h"
 
 extern OSBos kernel;
 extern Thread th_test::thread;
 
-namespace th_MechanicalActions { extern Thread task_STOP_ALL; }
+namespace MechanicalSystem { namespace tk_StopAll { extern Thread Task; } }
 
 // Private members
 namespace {
@@ -29,9 +31,9 @@ namespace {
 	String liveDataKeyValueFetcher(const char* key){
 		if(strcmp(key, "millis") == 0) return String(millis());
 		else if (strcmp(key, "wExample_liveShortValue") == 0) return (String("LSV: ") + String(millis()/100%100));
-		else if (strcmp(key, "wLowPressure") == 0) return "NO HAL";
-		else if (strcmp(key, "wMedPressure") == 0) return "NO HAL";
-		else if (strcmp(key, "wHighPressure") == 0) return "NO HAL";
+		else if (strcmp(key, "wLowPressure") == 0) return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_LOW));
+		else if (strcmp(key, "wMedPressure") == 0) return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_MED));
+		else if (strcmp(key, "wHighPressure") == 0) return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_HIGH));
 		else if (strcmp(key, "wDisplacement1") == 0) return "NO HAL";
 		else if (strcmp(key, "wDisplacement2") == 0) return "NO HAL";
 		else return String("NOT FOUND");
@@ -99,7 +101,7 @@ namespace {
 				lib_Eth::respond_text(client, String(myVal));
 			}
 			else if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, String(myVal));
-			else lib_Eth::respond_405(client, F("value-sender widgets only accept GET or PUT requests."));
+			else lib_Eth::respond_405(client, F("value-sender widgets only accept GET or POST requests."));
 		}
 
 		// Example alarm handler (the example toggle turns the alarm on and off)
@@ -182,10 +184,54 @@ namespace {
 		}
 
 		void G_wSTOP_ALL(EthernetClient& client, lib_Eth::HttpMsg& message){
-			kernel.StartTerminalAsyncTask(th_MechanicalActions::task_STOP_ALL, [client](int8_t result) mutable {
+			kernel.StartTerminalAsyncTask(MechanicalSystem::tk_StopAll::Task, [client](int8_t result) mutable {
 				if(result == 1) lib_Eth::respond_text(client, F("All functions halted"));
 				else lib_Eth::respond_text(client, F("ERROR"));
 			});
+		}
+
+		void GP_wTargetPressure(EthernetClient& client, lib_Eth::HttpMsg& message){
+			if(message.Method == lib_Eth::REQ_TYPE::POST){
+				bool success = false;
+				float setTo = 0;
+
+				setTo = lib_Util::StringToFloat(message.Body.c_str() + 6, success);  // value=###   <-- the value part is 6 chars long
+
+				if(success){
+					success = MechanicalSystem::SetTargetPressure(setTo);
+				}
+
+				if(success){
+					lib_Eth::respond_text(client, String(setTo));
+				}
+				else {
+					lib_Eth::respond_400(client, F("Failed to set the target pressure."));
+					//lib_Eth::respond_text(client, String(MechanicalSystem::GetTargetPressure()));
+				}
+			}
+			else if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, String(MechanicalSystem::GetTargetPressure()));
+			else lib_Eth::respond_405(client, F("The TargetPressure widget only accepts GET or POST requests."));
+		}
+
+		void G_wLowPressure(EthernetClient& client, lib_Eth::HttpMsg& message)  { lib_Eth::respond_text(client, String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_LOW))); }
+		void G_wMedPressure(EthernetClient& client, lib_Eth::HttpMsg& message)  { lib_Eth::respond_text(client, String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_MED))); }
+		void G_wHighPressure(EthernetClient& client, lib_Eth::HttpMsg& message) { lib_Eth::respond_text(client, String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_HIGH))); }
+
+		void GP_wWaterPump(EthernetClient& client, lib_Eth::HttpMsg& message){
+			if(message.Method == lib_Eth::REQ_TYPE::POST){
+				if(message.Body == "setTo=1"){
+					HAL::setDigitalOutput(HAL::DigitalOutput::WATER_PUMP_POWER, true);
+					lib_Eth::respond_text(client, String("1"));
+				}
+				else {
+					HAL::setDigitalOutput(HAL::DigitalOutput::WATER_PUMP_POWER, false);
+					lib_Eth::respond_text(client, String("0"));
+				}
+			}
+			else if(message.Method == lib_Eth::REQ_TYPE::GET){
+				lib_Eth::respond_text(client, String(HAL::getDigitalOutputState(HAL::DigitalOutput::WATER_PUMP_POWER)));
+			}
+			else lib_Eth::respond_405(client, F("toggle widgets only accept GET or POST requests."));
 		}
 
 		/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   / HTTP ROUTING HANDLERS     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
@@ -211,16 +257,23 @@ namespace th_WebServer{
 		}
 
 		Jarvis.On("/", routes::index);
-		Jarvis.On("/w/wExample_smartShortValue", routes::G_wExample_smartShortValue);
-		Jarvis.On("/w/wExample_valueSender", routes::GP_wExample_valueSender);
-		Jarvis.On("/w/wExample_toggle", routes::GP_wExample_toggle);
-		Jarvis.On("/w/wExample_alarm", routes::G_wExample_alarm);
-		Jarvis.On("/w/wExample_liveShortValue", routes::G_wExample_liveShortValue);
-		Jarvis.On("/w/wExample_button", routes::G_wExample_button);
-		Jarvis.On("/w/wExample_smartLabelValue", routes::G_wExample_smartLabelValue);
+		Jarvis.On("/wExample_smartShortValue", routes::G_wExample_smartShortValue);
+		Jarvis.On("/wExample_valueSender", routes::GP_wExample_valueSender);
+		Jarvis.On("/wExample_toggle", routes::GP_wExample_toggle);
+		Jarvis.On("/wExample_alarm", routes::G_wExample_alarm);
+		Jarvis.On("/wExample_liveShortValue", routes::G_wExample_liveShortValue);
+		Jarvis.On("/wExample_button", routes::G_wExample_button);
+		Jarvis.On("/wExample_smartLabelValue", routes::G_wExample_smartLabelValue);
 
-		Jarvis.On("/w/wSTOP_ALL", routes::G_wSTOP_ALL);
-		Jarvis.On("/w/wRTC", routes::G_RTC);
+		Jarvis.On("/wSTOP_ALL", routes::G_wSTOP_ALL);
+		Jarvis.On("/wRTC", routes::G_RTC);
+
+		Jarvis.On("/wTargetPressure", routes::GP_wTargetPressure);
+		Jarvis.On("/wLowPressure", routes::G_wLowPressure);
+		Jarvis.On("/wMedPressure", routes::G_wMedPressure);
+		Jarvis.On("/wHighPressure", routes::G_wHighPressure);
+
+		Jarvis.On("/wWaterPump", routes::GP_wWaterPump);
 
 		Jarvis.On("/liveDataPacketRequest", routes::P_liveDataPacketRequest);
 	}

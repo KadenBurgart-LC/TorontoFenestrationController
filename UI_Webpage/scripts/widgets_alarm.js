@@ -8,7 +8,7 @@ var alarmRefreshHandler = function(refreshImg){
     var id = w.attr('id');
     var img = w.find('.indicator > img');
     
-    $.get(rootUrl + '/w/' + id,
+    $.get(rootUrl + '/' + id,
         function(data){
           if(data == "1") img.attr('src', './assets/warnGif.gif');
           else img.attr('src', './assets/Warn.png');

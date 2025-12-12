@@ -2,7 +2,7 @@
 #define TH_BLINK
 
 #include <Arduino.h>
-#include "lib_OSBos.h"
+#include <OSBos.h>      // The custom library that acts as our simple kernel https://github.com/actuvon/OSBos
 
 // Public members
 namespace th_Blink {

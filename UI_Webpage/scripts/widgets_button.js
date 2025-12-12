@@ -23,7 +23,7 @@ var buttonClickHandler = function(buttonDiv){
 
 	textField.val("... ... ...");
 
-	$.get(rootUrl + '/w/' + id,
+	$.get(rootUrl + '/' + id,
 		function(data){
 			textField.val(data);
 		})

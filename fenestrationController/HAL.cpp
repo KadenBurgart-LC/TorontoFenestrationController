@@ -21,9 +21,9 @@ namespace {
 		{HAL::DigitalOutput::YELLOW_LED, false}
 	};
 
-	// Keep an internal memory map of what the slot number and channel number is for each 
-	// AutomationDirect output module-style output.
-	// [output, [slot number, channel number]]
+	/* Keep an internal memory map of what the slot number and channel number is for each 
+	   AutomationDirect output module-style output.
+	   [output, [slot number, channel number]] */
 	std::map<HAL::DigitalOutput, std::array<uint8_t, 2>> P1_DO_Channels = {
 		{HAL::DigitalOutput::STRUCTURAL_BLOWER_POWER, {1, 1}},
 		{HAL::DigitalOutput::LEAKAGE_BLOWER_POWER, {1, 2}},
@@ -35,25 +35,119 @@ namespace {
 		{HAL::DigitalOutput::YELLOW_LED, LED_BUILTIN}
 	};
 
+	// Keep an internal memory map of how to read each analog input
+	std::map<HAL::AnalogInput, HAL::AnalogSignalDefinition> AnalogSignals = {
+		{HAL::AnalogInput::PRESSURE_WINDOW_LOW, ([]() {
+			HAL::AnalogSignalDefinition def;
+
+			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
+			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+
+			def.SignalUnits = "Pa";
+			def.SignalUnitGain = 1;
+			def.SignalUnitOffset = 0;
+
+			def.P1_Slot = 2;
+			def.P1_Channel = 1;
+
+			return def;
+		})()},
+		{HAL::AnalogInput::PRESSURE_WINDOW_MED, ([]() {
+			HAL::AnalogSignalDefinition def;
+
+			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
+			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+
+			def.SignalUnits = "Pa";
+			def.SignalUnitGain = 1;
+			def.SignalUnitOffset = 0;
+
+			def.P1_Slot = 2;
+			def.P1_Channel = 1;
+
+			return def;
+		})()},
+		{HAL::AnalogInput::PRESSURE_WINDOW_HIGH, ([]() {
+			HAL::AnalogSignalDefinition def;
+
+			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
+			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+
+			def.SignalUnits = "Pa";
+			def.SignalUnitGain = 1;
+			def.SignalUnitOffset = 0;
+
+			def.P1_Slot = 2;
+			def.P1_Channel = 1;
+
+			return def;
+		})()},
+		{HAL::AnalogInput::PRESSURE_LFE_DIFFERENTIAL, ([]() {
+			HAL::AnalogSignalDefinition def;
+
+			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
+			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+
+			def.SignalUnits = "Pa";
+			def.SignalUnitGain = 1;
+			def.SignalUnitOffset = 0;
+
+			def.P1_Slot = 2;
+			def.P1_Channel = 1;
+
+			return def;
+		})()},
+		{HAL::AnalogInput::DISPLACEMENT_1, ([]() {
+			HAL::AnalogSignalDefinition def;
+
+			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
+			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+
+			def.SignalUnits = "Pa";
+			def.SignalUnitGain = 1;
+			def.SignalUnitOffset = 0;
+
+			def.P1_Slot = 2;
+			def.P1_Channel = 1;
+
+			return def;
+		})()},
+		{HAL::AnalogInput::DISPLACEMENT_2, ([]() {
+			HAL::AnalogSignalDefinition def;
+
+			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
+			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+
+			def.SignalUnits = "Pa";
+			def.SignalUnitGain = 1;
+			def.SignalUnitOffset = 0;
+
+			def.P1_Slot = 2;
+			def.P1_Channel = 1;
+
+			return def;
+		})()}
+	};
+
 	// The RGB LED setup line from the P1AM-200 documentation
 	Adafruit_NeoPixel C0_1_RgbLed(1, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-	uint8_t setDigitalOutputUtil(HAL::DigitalOutput o, bool state){
-		DO_States[o] = state;
-		return (uint8_t)state;
-	}
+	// uint8_t setDigitalOutputUtil(HAL::DigitalOutput o, bool state){
+	// 	DO_States[o] = state;
+	// 	return (uint8_t)state;
+	// }
 
-	uint8_t setP1DigitalOutput(HAL::DigitalOutput o, bool state){
-		P1.writeDiscrete(state, P1_DO_Channels[o][0], P1_DO_Channels[o][1]);
+	// uint8_t setP1DigitalOutput(HAL::DigitalOutput o, bool state){
+	// 	P1.writeDiscrete(state, P1_DO_Channels[o][0], P1_DO_Channels[o][1]);
 
-		return setDigitalOutputUtil(o, state);
-	}
+	// 	return setDigitalOutputUtil(o, state);
+	// }
 
-	uint8_t setArdPinDigitalOutput(HAL::DigitalOutput o, bool state){
-		digitalWrite(Arduino_pins[o], state);
+	// uint8_t setArdPinDigitalOutput(HAL::DigitalOutput o, bool state){
+	// 	digitalWrite(Arduino_pins[o], state);
 
-		return setDigitalOutputUtil(o, state);
-	}
+	// 	return setDigitalOutputUtil(o, state);
+	// }
 }
 
 // Public members
@@ -62,8 +156,29 @@ namespace HAL {
 	uint8_t setDigitalOutput(DigitalOutput o, bool state){
 		uint8_t returnCode = 2; // Return code 2 means the selected output was not implemented and no action was taken
 
-		if(o == DigitalOutput::STRUCTURAL_BLOWER_POWER) returnCode = setP1DigitalOutput(o, state);
-		if(o == DigitalOutput::YELLOW_LED) returnCode = setArdPinDigitalOutput(o, state);
+		auto ix1 = P1_DO_Channels.find(o);
+		auto ix2 = Arduino_pins.find(o);
+
+		if (ix1 != P1_DO_Channels.end()) {
+			uint8_t slot = (ix1->second)[0];
+			uint8_t channel = (ix1->second)[1];
+
+			P1.writeDiscrete(state, slot, channel);
+			DO_States[o] = state;
+
+			return (uint8_t)state;
+		}
+		else if (ix2 != Arduino_pins.end()) {
+			uint8_t pin = ix2->second;
+
+			digitalWrite(Arduino_pins[o], state);
+			DO_States[o] = state;
+
+			return (uint8_t)state;
+		}
+
+		//if(o == DigitalOutput::STRUCTURAL_BLOWER_POWER) returnCode = setP1DigitalOutput(o, state);
+		//if(o == DigitalOutput::YELLOW_LED) returnCode = setArdPinDigitalOutput(o, state);
 
 		return returnCode;
 	}
@@ -72,8 +187,21 @@ namespace HAL {
 		return DO_States[o];
 	}
 
-	float getAnalogInput(AnalogInput i){
+	float getAnalogInputFloat(AnalogInput i){
+		auto ix = AnalogSignals.find(i);
 
+		if (ix != AnalogSignals.end()){
+			AnalogSignalDefinition& sig = ix->second;
+
+			if (sig.P1_Slot > 0 && sig.P1_Channel > 0){
+				sig.LastIntermediateValue =  ((float)P1.readAnalog(sig.P1_Slot, sig.P1_Channel)) / sig.IntermediateMeasurementType_ConversionDenominator;
+				sig.LastSignalUnitValue = sig.LastIntermediateValue * sig.SignalUnitGain + sig.SignalUnitOffset;
+
+				return sig.LastSignalUnitValue;
+			}
+			else return 0;
+		}
+		else return 0;
 	}
 
 	void init_CPU(){

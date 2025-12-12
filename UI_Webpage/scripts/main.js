@@ -125,7 +125,7 @@ var ajaxTester = function(){
 
 var testToggleOn = function(){
   $.ajax({
-      url: rootUrl + '/w/wExample_toggle',
+      url: rootUrl + '/wExample_toggle',
       type: 'POST',
       data: { setTo: 1 }
     }).done(function(data){
