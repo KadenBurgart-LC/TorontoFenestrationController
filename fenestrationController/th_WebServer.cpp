@@ -1,12 +1,13 @@
 #include "th_WebServer.h"
 
 #include <OSBos.h>      // The custom library that acts as our simple kernel https://github.com/actuvon/OSBos
-#include "lib_Eth.h"
-#include "lib_Utils.h"
+#include "lib_Eth.h"            // Utilities for the ethernet server
+#include "lib_Utils.h"          // General utilities for converting string to float and whatnot
 #include "th_test.h"		    // Used for the example button widget
 #include <ArduinoJson.h>		// Downloaded and installed through the Arduino IDE. Author: Benoit Blanchon. Version 7.4.2 installed.
-#include "MechanicalSystem.h"
-#include "HAL.h"
+#include "MechanicalSystem.h"   // Our business logic for controlling the mechanical system
+#include "HAL.h" 		        // Our hardware abstraction layer
+#include <functional>           // standard c++ library
 
 extern OSBos kernel;
 extern Thread th_test::thread;
@@ -27,107 +28,154 @@ namespace {
 
 	bool ExampleAlarmToggleThingy = false;
 
-	// The live data packet requester outsources fetching key values to this helper function
-	String liveDataKeyValueFetcher(const char* key){
-		if(strcmp(key, "millis") == 0) return String(millis());
-		else if (strcmp(key, "wExample_liveShortValue") == 0) return (String("LSV: ") + String(millis()/100%100));
-		else if (strcmp(key, "wLowPressure") == 0) return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_LOW));
-		else if (strcmp(key, "wMedPressure") == 0) return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_MED));
-		else if (strcmp(key, "wHighPressure") == 0) return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_HIGH));
-		else if (strcmp(key, "wDisplacement1") == 0) return "NO HAL";
-		else if (strcmp(key, "wDisplacement2") == 0) return "NO HAL";
-		else return String("NOT FOUND");
+	float _exampleValueSenderValue = 0;
+
+	// Widgets come here to ask for values from the program
+	String GetWidgetStrVal(const char* key, bool& success){
+		success = false;
+
+		if(strcmp(key, "millis") == 0){
+			success = true;
+			return String(millis());
+		}
+		else if (strcmp(key, "wExample_liveShortValue") == 0){
+			success = true;
+			return (String("LSV: ") + String(millis()/100%100));
+		}
+		else if (strcmp(key, "wLowPressure") == 0){ 
+			success = true;
+			return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_LOW)); 
+		}
+		else if (strcmp(key, "wMedPressure") == 0){
+			success = true;
+			return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_MED));
+		}
+		else if (strcmp(key, "wHighPressure") == 0){
+			success = true;
+			return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_HIGH));
+		}
+		else if (strcmp(key, "wDisplacement1") == 0){
+			success = true;
+			return String(HAL::getAnalogInputFloat(HAL::AnalogInput::DISPLACEMENT_1));
+		}
+		else if (strcmp(key, "wDisplacement2") == 0){
+			success = true;
+			return String(HAL::getAnalogInputFloat(HAL::AnalogInput::DISPLACEMENT_2));
+		}
+		else if (strcmp(key, "wRTC") == 0){
+			success = true;
+			return HAL::RTC_GetDateTime();
+		}
+		else if (strcmp(key, "wLPvalvesDirection") == 0){
+			int8_t result = MechanicalSystem::GetLowPressureValveConfiguration();
+			if(result == 0){
+				success = true;
+				return "0";
+			}
+			else if (result == 1){
+				success = true;
+				return "1";
+			}
+			else return "ERROR";
+		}
+		else if (strcmp(key, "wHPvalvesDirection") == 0){
+			int8_t result = MechanicalSystem::GetHighPressureValveConfiguration();
+			if(result == 0){
+				success = true;
+				return "0";
+			}
+			else if (result == 1){
+				success = true;
+				return "1";
+			}
+			else return "ERROR";
+		}
+		else if(strcmp(key, "wTargetPressure") == 0){
+			success = true;
+			return String(MechanicalSystem::GetTargetPressure());
+		}
+		else if(strcmp(key, "wWaterPump") == 0){
+			success = true;
+			return String(HAL::getDigitalOutputState(HAL::DigitalOutput::WATER_PUMP_POWER));
+		}
+		else if(strcmp(key, "wExample_smartShortValue") == 0){
+			success = true;
+			return String(millis());
+		}
+		else if(strcmp(key, "wExample_smartLabelValue") == 0){
+			success = true;
+			return ("Example label value: " + String(millis()));
+		}
+		else if(strcmp(key, "wExample_valueSender") == 0){
+			success = true;
+			return String(_exampleValueSenderValue);
+		}
+		else if(strcmp(key, "wExample_alarm") == 0){
+			success = true;
+			return String((int)ExampleAlarmToggleThingy);
+		}
+		else if(strcmp(key, "wExample_toggle") == 0){
+			success = true;
+			return String((int)ExampleAlarmToggleThingy);
+		}
+		else {
+			success = false;
+			return String("NOT FOUND");
+		}
+	}
+	String GetWidgetStrVal(const char* key){ // Allow the user to not check for success
+		bool sadBool;
+		return GetWidgetStrVal(key, sadBool);
 	}
 
+	// Widgets come here to set program values
+	bool SetWidgetVal(const char* key, const char* val){
+		bool fltConvertWorked = false;
+		bool success = false;
+
+		if(strcmp(key, "wTargetPressure") == 0){
+			float setTo = lib_Util::StringToFloat(val, fltConvertWorked);
+
+			if(fltConvertWorked) success = MechanicalSystem::SetTargetPressure(setTo);
+		}
+		else if(strcmp(key, "wWaterPump") == 0) {
+			if(val[0] == '1') {
+				success = true;
+				HAL::setDigitalOutput(HAL::DigitalOutput::WATER_PUMP_POWER, true);
+			}
+			else if(val[0] == '0'){
+				success = true;
+				HAL::setDigitalOutput(HAL::DigitalOutput::WATER_PUMP_POWER, false);
+			}
+		}
+		else if(strcmp(key, "wExample_valueSender") == 0) {
+			float setTo = lib_Util::StringToFloat(val, fltConvertWorked);
+
+			if(fltConvertWorked){
+				_exampleValueSenderValue = setTo;
+				success = true;
+			}
+		}
+		else if(strcmp(key, "wExample_toggle") == 0) {
+			if(val[0] == '1') {
+				success = true;
+				ExampleAlarmToggleThingy = true;
+			}
+			else if(val[0] == '0'){
+				success = true;
+				ExampleAlarmToggleThingy = false;
+			}
+		}
+		else return false;
+
+		return success;
+	}
+	bool SetWidgetVal(const char* key, String val) { return SetWidgetVal(key, val.c_str()); }
+
 	namespace routes {
-		/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!     HTTP ROUTING HANDLERS     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-		 * 
-		 * These methods are run when the client requests specific paths in their HTTP method.
-		 * These methods are registered by Jarvis in th_WebServer::initialize(). Look at the Jarvis.On() hookups to see the paths
-		 * for each method.
-		 *
-		 * Name the method starting with...
-		 *   G_ for methods that accept GET requests (request data from the server).
-		 *   P_ for methods that accept POST requests (send data to the server).
-		 *   DO NOT USE PUT REQUESTS because programmers SUCK THEY'RE FUCKING AWFUL
-		 * 
-		 *   RULE: If a path accepts multiple types of requests, you can combine those prefixes in the order G, U, O.
-		 *   RULE: If the request is coming from a UI widget, the handler should be named after the ID of the widget. 
-		 *         Widget IDs start with a lowercase w.
-		 *
-		 *   Example: If we have a method for adding or retrieving log messages, where GET returns the last log message,
-		 *            or POST adds a new log line, we might name the handler GP_wLogLine, if the AJAX requests 
-		 *	          are coming from a widget with ID "wLogLine".
-		 */
 
 		void index(EthernetClient& client, lib_Eth::HttpMsg& message){
-			lib_Eth::respond_text(client, F("This server cannot currently supply its own web app. The web app must be downloaded from https://github.com/KadenBurgart-LC/TorontoFenestrationController/tree/main/UI_Webpage"));
-		}
-
-		void G_wExample_smartShortValue(EthernetClient& client, lib_Eth::HttpMsg& message){
-			if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, String(millis()));
-			else lib_Eth::respond_405(client, F("smart-short-value widgets only accept GET requests."));
-		}
-
-		void G_wExample_smartLabelValue(EthernetClient& client, lib_Eth::HttpMsg& message){
-			if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, "Example label value: " + String(millis()));
-			else lib_Eth::respond_405(client, F("smart-label-value widgets should only accept GET requests."));
-		}
-
-		// Example toggle handler (turns on and off the example alarm)
-		void GP_wExample_toggle(EthernetClient& client, lib_Eth::HttpMsg& message){
-			if(message.Method == lib_Eth::REQ_TYPE::POST){
-				if(message.Body == "setTo=1"){
-					ExampleAlarmToggleThingy = true;
-					lib_Eth::respond_text(client, String("1"));
-				}
-				else {
-					ExampleAlarmToggleThingy = false;
-					lib_Eth::respond_text(client, String("0"));
-				}
-			}
-			else if(message.Method == lib_Eth::REQ_TYPE::GET){
-				lib_Eth::respond_text(client, String((int)ExampleAlarmToggleThingy));
-			}
-			else lib_Eth::respond_405(client, F("toggle widgets only accept GET or PUT requests."));
-		}
-
-		// Example value-sender handler
-		void GP_wExample_valueSender(EthernetClient& client, lib_Eth::HttpMsg& message){
-			static float myVal = 0;
-
-			if(message.Method == lib_Eth::REQ_TYPE::POST){
-				myVal = atof(message.Body.c_str()+6); // value=###   <-- the value part is 6 chars long
-				lib_Eth::respond_text(client, String(myVal));
-			}
-			else if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, String(myVal));
-			else lib_Eth::respond_405(client, F("value-sender widgets only accept GET or POST requests."));
-		}
-
-		// Example alarm handler (the example toggle turns the alarm on and off)
-		void G_wExample_alarm(EthernetClient& client, lib_Eth::HttpMsg& message){
-			if(message.Method == lib_Eth::REQ_TYPE::GET){
-				lib_Eth::respond_text(client, String((int)ExampleAlarmToggleThingy));
-			}
-			else lib_Eth::respond_405(client, F("alarm widgets only accept GET requests."));
-		}
-
-		void G_wExample_liveShortValue(EthernetClient& client, lib_Eth::HttpMsg& message){
-			if(message.Method == lib_Eth::REQ_TYPE::GET){
-				lib_Eth::respond_text(client, (String("LSV:") + String(millis()/100%100)));
-			} else lib_Eth::respond_405(client, F("This method only accepts GET requests."));
-		}
-
-		// Asynchronous terminal task with callback response to WebApp
-		void G_wExample_button(EthernetClient& client, lib_Eth::HttpMsg& message){
-			/* This shows a more advanced feature of this architecture by initiating a terminal async task that
-			   turns the CPU LED blue for a few seconds, then turns it green again. The client doesn't get their
-			   success message until the async task inidcates that it's done. */
-
-			kernel.StartTerminalAsyncTask(th_test::thread, [client](int8_t result) mutable {
-				if(result == 1) lib_Eth::respond_text(client, F("SUCCESS!"));
-				else lib_Eth::respond_text(client, F("FAIL!"));
-			});
+			lib_Eth::respond_text(client, F("This server cannot currently serve up its own web app. The web app must be downloaded from https://github.com/KadenBurgart-LC/TorontoFenestrationController/tree/main/UI_Webpage"));
 		}
 
 		// The client UI requests live data in a packet each second. It asks us for certain values, and we give it those specific values.
@@ -156,7 +204,7 @@ namespace {
 
 				for(const char* key : requestedKeys){
 					// Start fetching data and building the response object
-					jsonResponse[key] = liveDataKeyValueFetcher(key);
+					jsonResponse[key] = GetWidgetStrVal(key);
 				}
 
 				lib_Eth::respond_json(client, "", 200, "OK", false); // send JSON headers without terminating the connection
@@ -166,75 +214,92 @@ namespace {
 			else lib_Eth::respond_405(client, F("The live data packet request endpoint only accepts POST requests."));
 		}
 
-		// Negative pressure toggle widget
-		void P_wNegativePressure(EthernetClient& client, lib_Eth::HttpMsg& message){
-			if(message.Body == "setTo=1"){
-
-			} else if(message.Body == "setTo = 0"){
-
-			}
-			else {
-
-			}
-		}
-
-		void G_RTC(EthernetClient& client, lib_Eth::HttpMsg& message){
-			if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, HAL::RTC_GetDateTime());
-			else lib_Eth::respond_405(client, "There is currently no mechanism for setting the RTC through the web server. Must use the SerialConsole.");
-		}
-
-		void G_wSTOP_ALL(EthernetClient& client, lib_Eth::HttpMsg& message){
-			kernel.StartTerminalAsyncTask(MechanicalSystem::tk_StopAll::Task, [client](int8_t result) mutable {
-				if(result == 1) lib_Eth::respond_text(client, F("All functions halted"));
-				else lib_Eth::respond_text(client, F("ERROR"));
-			});
-		}
-
-		void GP_wTargetPressure(EthernetClient& client, lib_Eth::HttpMsg& message){
-			if(message.Method == lib_Eth::REQ_TYPE::POST){
+		
+		// Request handler builders for widgets
+		lib_Eth::RequestHandler WidgetHandler_Toggle_Delayed(const char* widgetId, Thread& onTask, Thread& offTask){
+			return [=, &onTask, &offTask](EthernetClient& client, lib_Eth::HttpMsg& message) mutable {
 				bool success = false;
-				float setTo = 0;
 
-				setTo = lib_Util::StringToFloat(message.Body.c_str() + 6, success);  // value=###   <-- the value part is 6 chars long
+				if(message.Method == lib_Eth::REQ_TYPE::POST){
+					const char* setVal = message.Body.c_str() + 6; // setTo= is 6 characters
 
-				if(success){
-					success = MechanicalSystem::SetTargetPressure(setTo);
+					if(setVal[0] == '1') kernel.StartTerminalAsyncTask(onTask, [=](int8_t result) mutable {
+						if(result==1) lib_Eth::respond_text(client, "1");
+						else lib_Eth::respond_500(client, "ERROR: The system could not complete an action to turn on a toggle widget.");
+					});
+					else if (setVal[0] == '0') kernel.StartTerminalAsyncTask(offTask, [=](int8_t result) mutable {
+						if(result==1) lib_Eth::respond_text(client, "0");
+						else lib_Eth::respond_500(client, "ERROR: The system could not complete an action to turn off a toggle widget.");
+					});
+					else lib_Eth::respond_400(client, "ERROR: Toggle widgets only accept values of 0 or 1.");
 				}
+				else if(message.Method == lib_Eth::REQ_TYPE::GET){
+					String result = GetWidgetStrVal(widgetId, success);
 
-				if(success){
-					lib_Eth::respond_text(client, String(setTo));
+					if(success) lib_Eth::respond_text(client, result);
+					else lib_Eth::respond_500(client, "ERROR: There was an issue getting the value connected to this toggle widget.");
 				}
-				else {
-					lib_Eth::respond_400(client, F("Failed to set the target pressure."));
-					//lib_Eth::respond_text(client, String(MechanicalSystem::GetTargetPressure()));
-				}
-			}
-			else if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, String(MechanicalSystem::GetTargetPressure()));
-			else lib_Eth::respond_405(client, F("The TargetPressure widget only accepts GET or POST requests."));
+				else lib_Eth::respond_405(client, F("ERROR: Toggle widgets only accept GET or POST requests."));
+			};
 		}
-
-		void G_wLowPressure(EthernetClient& client, lib_Eth::HttpMsg& message)  { lib_Eth::respond_text(client, String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_LOW))); }
-		void G_wMedPressure(EthernetClient& client, lib_Eth::HttpMsg& message)  { lib_Eth::respond_text(client, String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_MED))); }
-		void G_wHighPressure(EthernetClient& client, lib_Eth::HttpMsg& message) { lib_Eth::respond_text(client, String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_HIGH))); }
-
-		void GP_wWaterPump(EthernetClient& client, lib_Eth::HttpMsg& message){
-			if(message.Method == lib_Eth::REQ_TYPE::POST){
-				if(message.Body == "setTo=1"){
-					HAL::setDigitalOutput(HAL::DigitalOutput::WATER_PUMP_POWER, true);
-					lib_Eth::respond_text(client, String("1"));
+		lib_Eth::RequestHandler WidgetHandler_Button_Delayed(Thread& task, const char* successMsg = "Button widget action success.", const char* failMsg = "ERROR: Button widget action failed."){
+			return [=, &task](EthernetClient& client, lib_Eth::HttpMsg& message) mutable {
+				if(message.Method == lib_Eth::REQ_TYPE::GET){
+					kernel.StartTerminalAsyncTask(task, [=](int8_t result) mutable {
+						if(result == 1) lib_Eth::respond_text(client, successMsg);
+						else lib_Eth::respond_text(client, failMsg);
+					});
 				}
-				else {
-					HAL::setDigitalOutput(HAL::DigitalOutput::WATER_PUMP_POWER, false);
-					lib_Eth::respond_text(client, String("0"));
-				}
-			}
-			else if(message.Method == lib_Eth::REQ_TYPE::GET){
-				lib_Eth::respond_text(client, String(HAL::getDigitalOutputState(HAL::DigitalOutput::WATER_PUMP_POWER)));
-			}
-			else lib_Eth::respond_405(client, F("toggle widgets only accept GET or POST requests."));
+				else lib_Eth::respond_405(client, "ERROR: Button widgets only accept GET requests.");
+			};
 		}
+		lib_Eth::RequestHandler WidgetHandler_SmartLabelValue(const char* widgetId){
+			return [widgetId](EthernetClient& client, lib_Eth::HttpMsg& message) -> void {
+				if(message.Method == lib_Eth::REQ_TYPE::GET) lib_Eth::respond_text(client, GetWidgetStrVal(widgetId));
+				else lib_Eth::respond_405(client, "ERROR: smart-label-value fields only accept GET requests.");
+			};
+		}
+		lib_Eth::RequestHandler WidgetHandler_ValueSender(const char* widgetId){
+			return [widgetId](EthernetClient& client, lib_Eth::HttpMsg& message) {
+				if(message.Method == lib_Eth::REQ_TYPE::POST){
+					bool success = false;
+					const char* dataString = message.Body.c_str() + 6; // value=###   <-- the value= part is 6 chars long
 
-		/* !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   / HTTP ROUTING HANDLERS     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
+					success = SetWidgetVal(widgetId, dataString);
+
+					if(success) lib_Eth::respond_text(client, dataString);
+					else lib_Eth::respond_400(client, "ERROR: Failed to set the value for a value-sender widget.");
+				}
+				else if(message.Method == lib_Eth::REQ_TYPE::GET){
+					lib_Eth::respond_text(client, GetWidgetStrVal(widgetId));
+				}
+				else lib_Eth::respond_405(client, F("ERROR: value-sender widgets only accept GET or POST requests"));
+			};
+		}
+		lib_Eth::RequestHandler WidgetHandler_LiveShortValue(const char* widgetId) { return WidgetHandler_SmartLabelValue(widgetId); }
+		lib_Eth::RequestHandler WidgetHandler_SmartShortValue(const char* widgetId) { return WidgetHandler_SmartLabelValue(widgetId); }
+		lib_Eth::RequestHandler WidgetHandler_Alarm(const char* widgetId) { return WidgetHandler_SmartLabelValue(widgetId); }
+		lib_Eth::RequestHandler WidgetHandler_Toggle(const char* widgetId) {
+			return [widgetId](EthernetClient& client, lib_Eth::HttpMsg& message) {
+				bool success = false;
+
+				if(message.Method == lib_Eth::REQ_TYPE::POST){
+					const char* setVal = message.Body.c_str() + 6; // setTo= is 6 characters
+
+					success = SetWidgetVal(widgetId, setVal);
+
+					if(success) lib_Eth::respond_text(client, setVal);
+					else lib_Eth::respond_500(client, "ERROR: Failed to set the value for a toggle widget.");
+				}
+				else if(message.Method == lib_Eth::REQ_TYPE::GET){
+					String result = GetWidgetStrVal(widgetId, success);
+
+					if(success) lib_Eth::respond_text(client, result);
+					else lib_Eth::respond_500(client, "ERROR: There was an issue getting the value connected to this toggle widget.");
+				}
+				else lib_Eth::respond_405(client, F("ERROR: Toggle widgets only accept GET or POST requests."));
+			};
+		}
 	}
 }
 
@@ -257,25 +322,30 @@ namespace th_WebServer{
 		}
 
 		Jarvis.On("/", routes::index);
-		Jarvis.On("/wExample_smartShortValue", routes::G_wExample_smartShortValue);
-		Jarvis.On("/wExample_valueSender", routes::GP_wExample_valueSender);
-		Jarvis.On("/wExample_toggle", routes::GP_wExample_toggle);
-		Jarvis.On("/wExample_alarm", routes::G_wExample_alarm);
-		Jarvis.On("/wExample_liveShortValue", routes::G_wExample_liveShortValue);
-		Jarvis.On("/wExample_button", routes::G_wExample_button);
-		Jarvis.On("/wExample_smartLabelValue", routes::G_wExample_smartLabelValue);
-
-		Jarvis.On("/wSTOP_ALL", routes::G_wSTOP_ALL);
-		Jarvis.On("/wRTC", routes::G_RTC);
-
-		Jarvis.On("/wTargetPressure", routes::GP_wTargetPressure);
-		Jarvis.On("/wLowPressure", routes::G_wLowPressure);
-		Jarvis.On("/wMedPressure", routes::G_wMedPressure);
-		Jarvis.On("/wHighPressure", routes::G_wHighPressure);
-
-		Jarvis.On("/wWaterPump", routes::GP_wWaterPump);
+		Jarvis.On("/wSTOP_ALL", routes::WidgetHandler_Button_Delayed(MechanicalSystem::tk_StopAll::Task, "All functions halted.", "Stop action failed."));
 
 		Jarvis.On("/liveDataPacketRequest", routes::P_liveDataPacketRequest);
+
+		Jarvis.On("/wRTC", routes::WidgetHandler_SmartLabelValue("wRTC"));
+		
+		Jarvis.On("/wTargetPressure", routes::WidgetHandler_ValueSender("wTargetPressure"));
+		Jarvis.On("/wLowPressure", routes::WidgetHandler_LiveShortValue("wLowPressure"));
+		Jarvis.On("/wMedPressure", routes::WidgetHandler_LiveShortValue("wMedPressure"));
+		Jarvis.On("/wHighPressure", routes::WidgetHandler_LiveShortValue("wHighPressure"));
+		Jarvis.On("/wDisplacement1", routes::WidgetHandler_LiveShortValue("wDisplacement1"));
+		Jarvis.On("/wDisplacement2", routes::WidgetHandler_LiveShortValue("wDisplacement2"));
+
+		Jarvis.On("/wWaterPump", routes::WidgetHandler_Toggle("wWaterPump"));
+		Jarvis.On("/wHPvalvesDirection", routes::WidgetHandler_Toggle_Delayed("wHPvalvesDirection", th_test::thread, th_test::thread));
+		Jarvis.On("/wLPvalvesDirection", routes::WidgetHandler_Toggle_Delayed("wLPvalvesDirection", MechanicalSystem::tk_SetLowPressure_Positive::Task, MechanicalSystem::tk_SetLowPressure_Negative::Task));
+
+		Jarvis.On("/wExample_smartShortValue", routes::WidgetHandler_SmartShortValue("wExample_smartShortValue"));
+		Jarvis.On("/wExample_smartLabelValue", routes::WidgetHandler_SmartLabelValue("wExample_smartLabelValue"));
+		Jarvis.On("/wExample_liveShortValue", routes::WidgetHandler_LiveShortValue("wExample_liveShortValue"));
+		Jarvis.On("/wExample_valueSender", routes::WidgetHandler_ValueSender("wExample_valueSender"));
+		Jarvis.On("/wExample_toggle", routes::WidgetHandler_Toggle("wExample_toggle"));
+		Jarvis.On("/wExample_alarm", routes::WidgetHandler_Alarm("wExample_alarm"));
+		Jarvis.On("/wExample_button", routes::WidgetHandler_Button_Delayed(th_test::thread));
 	}
 
 	/* Check and see if client requests have come in. Read the requests. Grab the requested path.

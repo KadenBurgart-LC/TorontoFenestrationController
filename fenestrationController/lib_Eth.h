@@ -124,8 +124,15 @@ namespace lib_Eth {
 		client.println(info);
 		if(terminate)closeConnection(client);
 	}
-
-
+	inline void respond_500(EthernetClient& client, const String& info = F("There is an issue with the system."), bool terminate = true){
+		client.println(F("HTTP/1.1 500 Internal Server Error"));
+		client.println(F("Content-Type: text/plain"));
+		client.println(F("Access-Control-Allow-Origin: *"));
+		client.println();
+		client.print(F("500 Internal Server Error: "));
+		client.println(info);
+		if(terminate)closeConnection(client);
+	}
 
 	// The structure of request handler functions to go in the EthernetButler routing table
 	using RequestHandler = std::function<void(EthernetClient& client, HttpMsg& message)>;

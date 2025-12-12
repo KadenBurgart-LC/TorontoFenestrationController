@@ -18,6 +18,9 @@ namespace MechanicalSystem {
 	bool SetTargetPressure(float pressure);
 	float GetTargetPressure();
 
+	int8_t GetLowPressureValveConfiguration();
+	int8_t GetHighPressureValveConfiguration();
+
 	namespace th_HighPressurePID_RUN { }
 	namespace th_LowPressurePID_RUN { }
 
@@ -26,8 +29,14 @@ namespace MechanicalSystem {
 		int8_t Tick();
 	}
 
-	namespace tk_SetLowPressure_Positive { }
-	namespace tk_SetLowPressure_Negative { }
+	namespace tk_SetLowPressure_Positive { 
+		extern Thread Task;
+		int8_t Tick();
+	}
+	namespace tk_SetLowPressure_Negative { 
+		extern Thread Task;
+		int8_t Tick();
+	}
 	namespace tk_SetHighPressure_Positive { }
 	namespace tk_SetHighPressure_Negative { }
 

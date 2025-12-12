@@ -92,9 +92,13 @@ var toggleRefreshHandler = function(refreshImg){
             sit.removeClass('sitError');
           }
           else {
-              slide.addClass('slideError');
-              sit.addClass('sitError');
+            slide.addClass('slideError');
+            sit.addClass('sitError');
           }
+        })
+        .fail(function(data){
+          slide.addClass('slideError');
+          sit.addClass('sitError');
         })
         .always(function(){
           refreshButtonReadyMode(refreshImg);

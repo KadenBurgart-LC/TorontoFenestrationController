@@ -108,6 +108,8 @@ void setup() {
 
   // Terminal Async Task Initialization
   kernel.AddThread(MechanicalSystem::tk_StopAll::Task);
+  kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Positive::Task);
+  kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Negative::Task);
   kernel.AddThread(th_test::thread);                      // Used for the example button widget
 }
 
