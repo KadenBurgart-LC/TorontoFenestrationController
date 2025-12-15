@@ -6,50 +6,52 @@
 #include "Arduino.h"
 
 namespace {
-	inline uint8_t StateTracker = 0;
-	inline unsigned long StartTime = 0;
-
-	inline unsigned long DelayThreshold = 2000;
+	// You can put stuff in here and it will only be visible to this file
 }
 
 namespace th_test {
 
 	inline int8_t tick(){
+		static uint8_t threadState = 0;
+		static unsigned long startTime = 0;
+		static unsigned long delayThreshold = 2000;
+
 		int8_t returnCode = 0;
 
-		if (StateTracker == 0){
-			StartTime = millis();
+		if (threadState == 0){
+			startTime = millis();
 
 			HAL::set_C0_1_RgbLed(0,3,8);
 
-			StateTracker++;
+			threadState++;
 		}
-		else if (StateTracker == 1){
+		else if (threadState == 1){
 			// Wait for 1 second
-			if ((unsigned long)(millis() - StartTime) > DelayThreshold) StateTracker++;
+			if ((unsigned long)(millis() - startTime) > delayThreshold) threadState++;
 		}
-		else if (StateTracker == 2){
+		else if (threadState == 2){
 			HAL::set_C0_1_RgbLed_ReadySignal();
-			StateTracker = 0;
+			threadState = 0;
 			return 1;
 		}
 
 		return returnCode;
 	}
 
-	inline Thread createMyThread(){
-		Thread myThread;
+	inline Thread thread = NewTerminalTask(tick, 300);
 
-		myThread.Active = false;
-		myThread.RootMethod = tick;
-		myThread.ReadyPeriod_ms = 300;
+	// The old way of making an async terminal task before I made the NewTerminalTask(rootMethod, timer_ms) function...
+	// inline Thread createMyThread(){
+	// 	Thread myThread;
 
-		myThread.IsTerminalTask = true;
+	// 	myThread.Active = false;
+	// 	myThread.RootMethod = tick;
+	// 	myThread.ReadyPeriod_ms = 300;
 
-		return myThread;
-	}
+	// 	myThread.IsTerminalTask = true;
 
-	inline Thread thread = createMyThread();
+	// 	return myThread;
+	// }
 }
 
 #endif
