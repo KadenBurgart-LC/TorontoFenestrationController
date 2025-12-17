@@ -237,7 +237,6 @@ namespace th_SerialConsole{
     console.AddCommand("sdrm", c_SD_rm, "Delete a file from the SD card.\nsdrm <filePath>");
     console.AddCommand("sdappend", c_SD_append, "Append data to a file.\nsdappend <filePath> <dataToAppend>\nNote that there can't be spaces in the string, since that's the argument delimiter!");
     console.AddCommand("RTCget", c_RTC_get, "Print the current date and time according to the Real-Time Clock");
-    //console.AddCommand("RTCset", c_RTC_set, "Set the date and time on the RTC.\nRTCset Dec 05 2025 Fri 11:45:00\nNote: This is picky as fuck.");
     console.AddCommand("RTCset", c_RTC_set, "Set the date and time on the RTC.\nRTCset <YYYY> <MM> <DD> <HH> <MM> <SS>\nExample: RTCset 2025 12 05 15 21 00");
     console.AddCommand("logLine", c_Log_Line, "Add a line with a custom description to the day's log file, and show the full line in the console.\nlogLine <customTextToWrite>");
     console.AddCommand("logFile", c_LogFile, "What is the path of the current log file?");

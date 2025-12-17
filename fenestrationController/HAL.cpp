@@ -341,7 +341,7 @@ namespace HAL {
 	}
 
 	/* Check if a directory exists. Make it if it doesn't */
-	bool SD_EnsureDirExists(const char* dir){
+	void SD_EnsureDirExists(const char* dir){
 		if(!SD.exists(dir)) SD.mkdir(dir);
 	}
 
@@ -350,15 +350,14 @@ namespace HAL {
 	bool SD_AppendFile(const char* dataToAppend, const char* filePath){
 		bool success = false;
 		File sdFile = SD.open(filePath, FILE_WRITE);
+		size_t written = 0;
 
 		if(sdFile){
-			sdFile.print(dataToAppend);
+			written = sdFile.print(dataToAppend);
 			sdFile.close();
-
-			if(SD.exists(filePath)) success = true;
 		}
 
-		return success;
+		return (written > 0);
 	}
 
 	/* A function to set the date and time on the RTC that DOESN'T SUCK FERMENTED ASSHOLE */
@@ -419,6 +418,19 @@ namespace HAL {
 		dateStr += (month(t) < 10) ? "0" : "";
 		dateStr += month(t);
 		dateStr += "-";
+		dateStr += (day(t) < 10) ? "0" : "";
+		dateStr += day(t);
+
+		return dateStr;
+	}
+
+	String RTC_GetDate_Safe(){
+		String dateStr = "";
+		time_t t = PCF8563_RTC.getEpoch();
+
+		dateStr += year(t);
+		dateStr += (month(t) < 10) ? "0" : "";
+		dateStr += month(t);
 		dateStr += (day(t) < 10) ? "0" : "";
 		dateStr += day(t);
 

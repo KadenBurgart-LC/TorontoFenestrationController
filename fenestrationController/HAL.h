@@ -118,7 +118,7 @@ namespace HAL {
 	bool SD_DeleteFile(const char* filePath);
 
 	/* Check if a directory exists. Make it if it doesn't */
-	bool SD_EnsureDirExists(const char* dir);
+	void SD_EnsureDirExists(const char* dir);
 
 	/* Add to a file on the SD card. Mostly for logging. 
 	   Returns true if we don't notice a problem (fail to open the file). */
@@ -138,6 +138,8 @@ namespace HAL {
 
 	/* Get the date in YYYY-MM-DD format, ignoring time. */
 	String RTC_GetDate();
+
+	String RTC_GetDate_Safe();
 }
 
 #endif

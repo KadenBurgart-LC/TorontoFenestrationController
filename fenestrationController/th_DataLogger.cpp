@@ -12,24 +12,7 @@
 namespace {
 
 	#define LOG_LINE_DATA_STR_LENGTH 200
-	#define LOG_BUFFER_LENGTH 20
-	#define MAX_NOTE_SIZE 150
-	#define MAX_PATH_LENGTH 50
-
-	char fullLineCstr[LOG_LINE_DATA_STR_LENGTH + MAX_NOTE_SIZE];
-	char logFilePathCstr[MAX_PATH_LENGTH];
-
-	// Convert floats to character buffers.
-	// Increase all buffer sizes by some MORE bytes to allow for stupid.
-	char ts[25];
-	char lowPres[16];  // lowPressureSensor (Pa) (one decimal place) (4 chars +1 for "-", +1 for "\0")
-	char dis1[16]; // displacement1 (mm) (2 decimal places) (5 chars +1 for "-", +1 for "\0")
-	char dis2[16]; // displacement2 (mm) (2 decimal places) (5 chars +1 for "-", +1 for "\0")
-	char lfeD[16]; // LFE differential pressure (Pa) (two decimal places) (7 chars +1 for "-", +1 for "\0")
-	char lfeA[16]; // LFE abs pressure (kPa) (two decimal places) (6 chars +1 for "\0")
-	char lfeT[16]; // LFE air temperature (°C) (one decimal place) (4 chars +1 for "-", +1 for "\0")
-	char ambT[16]; // Ambient air temperature (°C) (one decimal place) (4 chars +1 for "-", +1 for "\0")
-	char ambH[16]; // Ambient humidity (%) (one decimal place) (4 chars +1 for "\0")
+	#define LOG_BUFFER_LENGTH 5
 
 	struct LogEntry {
 		uint64_t fullTimestamp;				// Seconds since 1970-1-1 * 10 + number of entries made this second
@@ -44,23 +27,27 @@ namespace {
 
 	String _getCurrentLogFilePath(){
 		String logFilePath = "logs/";
-		logFilePath += HAL::RTC_GetDate();
+		logFilePath += HAL::RTC_GetDate_Safe();
 		logFilePath += ".csv";
 
 		return logFilePath;
 	}
 
 	void _uint64ToString(uint64_t n, char* buf) {
-	    char temp[21]; // Max uint64_t is 20 digits
+	    char temp[21]; // Max digits for uint64_t + null
 	    int i = 0;
-	    if (n == 0) temp[i++] = '0';
-	    else {
-	        while (n > 0 && i < 20) { // Safety check
+	    if (n == 0) {
+	        temp[i++] = '0';
+	    } else {
+	        while (n > 0) {
 	            temp[i++] = (n % 10) + '0';
 	            n /= 10;
 	        }
 	    }
-	    for (int j = 0; j < i; j++) buf[j] = temp[i - 1 - j];
+	    // Reverse the string into the target buffer
+	    for (int j = 0; j < i; j++) {
+	        buf[j] = temp[i - 1 - j];
+	    }
 	    buf[i] = '\0';
 	}
 
@@ -77,6 +64,17 @@ namespace {
 		}
 		_lastTimestamp = entry.fullTimestamp;
 
+		// Convert floats to character buffers.
+		// Increase all buffer sizes by 2 MORE bytes to allow for stupid.
+		char ts[15];
+		char lowPres[8];  // lowPressureSensor (Pa) (one decimal place) (4 chars +1 for "-", +1 for "\0")
+		char dis1[9]; // displacement1 (mm) (2 decimal places) (5 chars +1 for "-", +1 for "\0")
+		char dis2[9]; // displacement2 (mm) (2 decimal places) (5 chars +1 for "-", +1 for "\0")
+		char lfeD[11]; // LFE differential pressure (Pa) (two decimal places) (7 chars +1 for "-", +1 for "\0")
+		char lfeA[9]; // LFE abs pressure (kPa) (two decimal places) (6 chars +1 for "\0")
+		char lfeT[8]; // LFE air temperature (°C) (one decimal place) (4 chars +1 for "-", +1 for "\0")
+		char ambT[8]; // Ambient air temperature (°C) (one decimal place) (4 chars +1 for "-", +1 for "\0")
+		char ambH[7]; // Ambient humidity (%) (one decimal place) (4 chars +1 for "\0")
 		_uint64ToString(entry.fullTimestamp, ts);
 		dtostrf(75.8, 0, 1, lowPres);
 		dtostrf(99.04, 0, 2, dis1);
@@ -87,16 +85,14 @@ namespace {
 		dtostrf(21.2, 0, 1, ambT);
 		dtostrf(38.1, 0, 1, ambH);
 
-		String dateTime = HAL::RTC_GetDateTime();
-		char datetime[25];
-		strcpy(datetime, dateTime.c_str());
+		//Serial.println("just before snprintf");
 
-		snprintf(
+		int n = snprintf(
 			entry.dataLine,
 			LOG_LINE_DATA_STR_LENGTH,
 			"%s,%s,%i,%s,%i,%i,%s,%s,%s,%s,%s,%s,%s,%i,%i,%i,%i,%i,",
 			ts, // (11 chars)
-			datetime, // (19 chars)
+			HAL::RTC_GetDateTime().c_str(), // (19 chars)
 			14390,  // targetPressure (Pa)  PG100 goes to 9600 Pa. PG200 goes to 14390 Pa (5 chars)
 			lowPres, // lowPressureSensor (Pa) (one decimal place) (4 chars)
 			9500,  // medPressureSensor (Pa) (no decimal places) (5 chars)
@@ -116,15 +112,17 @@ namespace {
 			);
 		entry.note = adtNote;
 
+		//Serial.println(n);
+		if(n <= 0 || n >= (int)sizeof(entry.dataLine)) return -1;
+
 		String fullLine = String(entry.dataLine) + adtNote + "\n";
 		String logFilePath = _getCurrentLogFilePath();
-
-		strcpy(fullLineCstr, fullLine.c_str());
-		strcpy(logFilePathCstr, logFilePath.c_str());
 		
 		HAL::SD_EnsureDirExists("logs");
 
-		if(HAL::SD_AppendFile(fullLineCstr, logFilePathCstr)) return 1; // success
+		Serial.println(logFilePath);
+		
+		if(HAL::SD_AppendFile(fullLine.c_str(), logFilePath.c_str())) return 1; // success
 		else return -1; // action failed
 	}
 }
@@ -149,7 +147,7 @@ namespace th_DataLogger {
 	String getLastLogLine(){
 		uint8_t lastIX = (_bufferIX == 0) ? LOG_BUFFER_LENGTH - 1 : _bufferIX - 1;
 
-		LogEntry &lastEntry = _logBuffer[lastIX];
+		LogEntry lastEntry = _logBuffer[lastIX];
 
 		String lastLine = String(lastEntry.dataLine) + lastEntry.note;
 
