@@ -1,6 +1,7 @@
 #include "th_SerialConsole.h"
 
 #include "HAL.h"
+#include "th_DataLogger.h"
 #include <SerialConsole.h>  // https://github.com/actuvon/SerialConsole
 #include <P1AM.h>      // The public library for the AutomationDirect controller we are using  https://github.com/facts-engineering/P1AM
 
@@ -209,6 +210,17 @@ namespace {
   void c_RTC_get(){
     Serial.println(HAL::RTC_GetDateTime());
   }
+
+  void c_Log_Line(){
+    bool success = th_DataLogger::writeToLog(String(console.Arguments[1]));
+    Serial.println(th_DataLogger::getLastLogLine());
+
+    if(!success) Serial.println("Write action failed.");
+  }
+
+  void c_LogFile(){
+    Serial.println(th_DataLogger::getCurrentLogFilePath());
+  }
 }
 
 namespace th_SerialConsole{
@@ -227,6 +239,8 @@ namespace th_SerialConsole{
     console.AddCommand("RTCget", c_RTC_get, "Print the current date and time according to the Real-Time Clock");
     //console.AddCommand("RTCset", c_RTC_set, "Set the date and time on the RTC.\nRTCset Dec 05 2025 Fri 11:45:00\nNote: This is picky as fuck.");
     console.AddCommand("RTCset", c_RTC_set, "Set the date and time on the RTC.\nRTCset <YYYY> <MM> <DD> <HH> <MM> <SS>\nExample: RTCset 2025 12 05 15 21 00");
+    console.AddCommand("logLine", c_Log_Line, "Add a line with a custom description to the day's log file, and show the full line in the console.\nlogLine <customTextToWrite>");
+    console.AddCommand("logFile", c_LogFile, "What is the path of the current log file?");
   }
 
   int8_t tick(){

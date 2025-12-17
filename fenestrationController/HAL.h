@@ -17,6 +17,7 @@ When including other files, please explain what they are and what they do.
 #include <stdint.h>
 #include <Stream.h>
 #include <Arduino.h>
+#include <TimeLib.h>   // Used for working with time_t objects, mostly for the RTC         https://github.com/PaulStoffregen/Time
 
 namespace HAL {
 	enum class DigitalOutput {
@@ -93,38 +94,50 @@ namespace HAL {
 
 	/* Print out all entries in a particular directory on the SD card.
        This function takes in any stream, so we can use the Serial interface or the web client. */
-	void SD_PrintDirectory(Stream& printer, char* dir);
+	void SD_PrintDirectory(Stream& printer, const char* dir);
 
 	/* Print out the contents of a particular file on the SD card.
        This function takes in any stream, so we can use the Serial interface or the web client. 
        Returns true if the file was found and printed. */
-	bool SD_PrintFileContents(Stream& printer, char* filePath); 
+	bool SD_PrintFileContents(Stream& printer, const char* filePath); 
 
 	/* Take an input stream and write everything from that stream into a file on the SD card
 	   until inputStream.available() isn't true anymore. 
 	   If the file already exists, it will be deleted and replaced with the new data from the
 	   input stream. 
 	   Returns true if the file was written successfully. */
-	bool SD_WriteFileFromStream(Stream& inputStream, char* filePath);
+	bool SD_WriteFileFromStream(Stream& inputStream, const char* filePath);
 
 	/* Take a C string and write the contents to a file.
 	   If the file already exists, it will be deleted and replaced with the new data.
 	   Retruns true if the file was written successfully. */
-	bool SD_WriteFile(char* dataToWrite, char* filePath);
+	bool SD_WriteFile(const char* dataToWrite, const char* filePath);
 
 	/* Delete a file at the given path. 
 	   Returns true if the file was found and deleted. */
-	bool SD_DeleteFile(char* filePath);
+	bool SD_DeleteFile(const char* filePath);
+
+	/* Check if a directory exists. Make it if it doesn't */
+	bool SD_EnsureDirExists(const char* dir);
 
 	/* Add to a file on the SD card. Mostly for logging. 
 	   Returns true if we don't notice a problem (fail to open the file). */
-	bool SD_AppendFile(char* dataToAppend, char* filePath);
+	bool SD_AppendFile(const char* dataToAppend, const char* filePath);
 
-	/* A function to set the date and time on the RTC that DOESN'T SUCK FERMENTED ASSHOLE */
+	/* A function to set the date and time on the RTC that DOESN'T SUCK */
 	void RTC_SetDateTime(uint16_t year, uint8_t month, uint8_t day, uint8_t hour, uint8_t minute, uint8_t second);
+
+	/* Get the current time from the RTC, and return a computer-friendly struct with the date+time */
+	//tmElements_t RTC_GetDateTime_Elements();
 
 	/* A function to recall the current date and time from the Real-Time Clock */
 	String RTC_GetDateTime();
+
+	/* A function to recall the current date/time in terms of seconds since Jan 1 1970 (unix timestamp) */
+	time_t RTC_GetEpoch();
+
+	/* Get the date in YYYY-MM-DD format, ignoring time. */
+	String RTC_GetDate();
 }
 
 #endif

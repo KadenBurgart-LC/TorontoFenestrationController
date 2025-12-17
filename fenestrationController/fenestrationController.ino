@@ -82,7 +82,7 @@
 #include "th_SerialConsole.h"           // Code relating to the serial console thread | WARNING: This is bypassing the HAL right now, using the Arduino Serial library AND digital outputs.
 #include "th_WebServer.h"               // Code relating to the web server thread | WARNING: This is bypassing the HAL right now, using the Arduino Ethernet library.
 #include "MechanicalSystem.h"           // The business logic of controlling our actuators on the wall
-//#include "th_DataLogger.h"              // Code relating to the data logging thread, which reads the state of the machine and saves to SD card and such
+#include "th_DataLogger.h"              // Code relating to the data logging thread, which reads the state of the machine and saves to SD card and such
 
 // Help us keep track of what version of the code is running
 #define PROGRAM_VERSION "v0.1 - DRAFT"

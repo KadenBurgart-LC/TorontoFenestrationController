@@ -246,7 +246,7 @@ namespace HAL {
 
 	/* Print out all entries in a particular directory on the SD card.
 	   This function takes in any stream, so we can use the Serial interface or the web client. */
-	void SD_PrintDirectory(Stream& printer, char* dir){
+	void SD_PrintDirectory(Stream& printer, const char* dir){
 		File dirf = SD.open(dir);
 
 		printer.print("Listing the contents of directory \"");
@@ -272,12 +272,16 @@ namespace HAL {
 	/* Print out the contents of a particular file on the SD card.
 	   This function takes in any stream, so we can use the Serial interface or the web client. 
 	   Returns true if the file was found and printed. */
-	bool SD_PrintFileContents(Stream& printer, char* filePath){
+	bool SD_PrintFileContents(Stream& printer, const char* filePath){
 		bool success = false;
 		File sdFile = SD.open(filePath);
+		uint8_t buffer[64];
 
 		if(sdFile){
-			while(sdFile.available()) printer.write(sdFile.read());
+			while(sdFile.available()){
+				int bytesRead = sdFile.read(buffer, sizeof(buffer));
+				printer.write(buffer, bytesRead);
+			}
 			sdFile.close();
 			success = true;
 		}
@@ -295,7 +299,7 @@ namespace HAL {
 	   If the file already exists, it will be deleted and replaced with the new data from the
 	   input stream. 
 	   Returns true if the file was written successfully. */
-	bool SD_WriteFileFromStream(Stream& inputStream, char* filePath){
+	bool SD_WriteFileFromStream(Stream& inputStream, const char* filePath){
 		bool success = false;
 
 		// Delete the file if it already exists
@@ -313,7 +317,7 @@ namespace HAL {
 	/* Take a C string and write the contents to a file.
 	   If the file already exists, it will be deleted and replaced with the new data.
    	   Retruns true if the file was written successfully. */
-	bool SD_WriteFile(char* dataToWrite, char* filePath){
+	bool SD_WriteFile(const char* dataToWrite, const char* filePath){
 		StringStream fakeStream;
 
 		fakeStream.print(dataToWrite);
@@ -323,7 +327,7 @@ namespace HAL {
 
 	/* Delete a file at the given path. 
 	   Returns true if the file was found and deleted. */
-	bool SD_DeleteFile(char* filePath){
+	bool SD_DeleteFile(const char* filePath){
 		bool success = false;
 		bool fileFound = false;
 
@@ -336,9 +340,14 @@ namespace HAL {
 		return success;
 	}
 
+	/* Check if a directory exists. Make it if it doesn't */
+	bool SD_EnsureDirExists(const char* dir){
+		if(!SD.exists(dir)) SD.mkdir(dir);
+	}
+
 	/* Add to a file on the SD card. Mostly for logging. 
 	   Returns true if we don't fail to open the file. */
-	bool SD_AppendFile(char* dataToAppend, char* filePath){
+	bool SD_AppendFile(const char* dataToAppend, const char* filePath){
 		bool success = false;
 		File sdFile = SD.open(filePath, FILE_WRITE);
 
@@ -368,6 +377,8 @@ namespace HAL {
 		PCF8563_RTC.setEpoch(t);
 	}
 
+	//tmElements_t RTC_GetDateTime_Elements(){ return PCF8563_RTC.getEpoch(); }
+
 	/* A function to recall the current date and time from the Real-Time Clock */
 	String RTC_GetDateTime(){
 		String dateTimeStr = "";
@@ -392,4 +403,26 @@ namespace HAL {
 
 		return dateTimeStr;
 	}
+
+	/* A function to recall the current date/time in terms of seconds since Jan 1 1970 (unix timestamp) */
+	time_t RTC_GetEpoch(){
+		return PCF8563_RTC.getEpoch();
+	}
+
+	/* Get the date in YYYY-MM-DD format, ignoring time. */
+	String RTC_GetDate(){
+		String dateStr = "";
+		time_t t = PCF8563_RTC.getEpoch();
+
+		dateStr += year(t);
+		dateStr += "-";
+		dateStr += (month(t) < 10) ? "0" : "";
+		dateStr += month(t);
+		dateStr += "-";
+		dateStr += (day(t) < 10) ? "0" : "";
+		dateStr += day(t);
+
+		return dateStr;
+	}
+
 }
