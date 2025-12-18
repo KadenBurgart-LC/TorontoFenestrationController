@@ -2,12 +2,12 @@
 
 
 // Go button hover
-$('.live-short-value>.go>img').on('mouseenter', function(){ $(this).attr("src", "./assets/Go2.png"); });
-$('.live-short-value>.go>img').on('mouseleave', function(){ $(this).attr("src", "./assets/Go.png"); });
+$('.long-live-value>.go>img').on('mouseenter', function(){ $(this).attr("src", "./assets/Go2.png"); });
+$('.long-live-value>.go>img').on('mouseleave', function(){ $(this).attr("src", "./assets/Go.png"); });
 
 
 // Refresh handler
-var liveShortValueRefreshHandler = function(refreshImg){
+var longLiveValueRefreshHandler = function(refreshImg){
       refreshButtonLoadingMode(refreshImg);
 
       var w = refreshImg.closest('.widget');
@@ -27,12 +27,12 @@ var liveShortValueRefreshHandler = function(refreshImg){
   };
 
 // Bind the refresh button click to the refresh handler
-$('.live-short-value').find('.refresh>img').on('click', function(){ liveShortValueRefreshHandler($(this)); });
+$('.long-live-value').find('.refresh>img').on('click', function(){ longLiveValueRefreshHandler($(this)); });
 
 
 
 // Go/pause button 
-var liveShortValueGoPauseClickHandler = function(goImg){
+var LongLiveValueGoPauseClickHandler = function(goImg){
     var w = goImg.closest('.widget');
     var refreshImg = w.find('.refresh>img');
     var id = w.attr('id');
@@ -46,7 +46,7 @@ var liveShortValueGoPauseClickHandler = function(goImg){
         unsubscribeFromLiveDataRequester(id);
 
         refreshButtonReadyMode(refreshImg);
-        refreshImg.on('click', function(){ liveShortValueRefreshHandler(refreshImg) });
+        refreshImg.on('click', function(){ longLiveValueRefreshHandler(refreshImg) });
         
         goImg.off('mouseenter mouseleave');
         goImg.attr('src', './assets/Go.png');
@@ -67,4 +67,4 @@ var liveShortValueGoPauseClickHandler = function(goImg){
         });
     }
 }
-$('.live-short-value').find('.go>img').on('click', function(){ liveShortValueGoPauseClickHandler($(this)); } );
+$('.long-live-value').find('.go>img').on('click', function(){ LongLiveValueGoPauseClickHandler($(this)); } );

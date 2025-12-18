@@ -44,6 +44,9 @@ div {
 .widget {
   padding: 10px;
 }
+.long {
+  grid-column: 1 / 3;
+}
 .widget .dataField > input {
   margin: 2px;
   height: 28px;
@@ -66,6 +69,16 @@ div {
 .widget .live-short-value {
   display:grid; 
   grid-template-columns: 35px 110px 35px 1fr;
+}
+
+
+
+.widget .long-live-value .dataField > input {
+  width: 99%;
+}
+.widget .long-live-value {
+  display:grid; 
+  grid-template-columns: 35px 145px 35px 1fr;
 }
 
 

@@ -10,6 +10,7 @@
 #include <StreamUtils.h> // Used to turn a string into a stream for SD card file writing utilities    https://github.com/bblanchon/ArduinoStreamUtils
 #include <PCF8563.h>   // Used for the RTC on the P1AM-200; I hate this library        https://github.com/facts-engineering/PCF8563_RTC
 #include <TimeLib.h>   // Used for working with time_t objects, mostly for the RTC         https://github.com/PaulStoffregen/Time
+#include "lib_Utils.h" // Used so I can see if I am using up all my RAM
 
 // Private members
 namespace {
@@ -68,6 +69,21 @@ namespace {
 			return def;
 		})()},
 		{HAL::AnalogInput::PRESSURE_WINDOW_HIGH, ([]() {
+			HAL::AnalogSignalDefinition def;
+
+			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
+			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+
+			def.SignalUnits = "Pa";
+			def.SignalUnitGain = 1;
+			def.SignalUnitOffset = 0;
+
+			def.P1_Slot = 2;
+			def.P1_Channel = 1;
+
+			return def;
+		})()},
+		{HAL::AnalogInput::PRESSURE_LFE_DIFFERENTIAL, ([]() {
 			HAL::AnalogSignalDefinition def;
 
 			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;

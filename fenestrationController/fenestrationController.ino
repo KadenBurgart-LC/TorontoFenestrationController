@@ -83,10 +83,11 @@
 #include "th_WebServer.h"               // Code relating to the web server thread | WARNING: This is bypassing the HAL right now, using the Arduino Ethernet library.
 #include "MechanicalSystem.h"           // The business logic of controlling our actuators on the wall
 #include "th_DataLogger.h"              // Code relating to the data logging thread, which reads the state of the machine and saves to SD card and such
+#include "lib_Utils.h"
 
 // Help us keep track of what version of the code is running
-#define PROGRAM_VERSION "v0.1 - DRAFT"
-#define PROGRAM_VERSION_DATE "2025-11-24"
+#define PROGRAM_VERSION "v0.3 - DRAFT"
+#define PROGRAM_VERSION_DATE "2025-12-17"
 #define PROGRAM_NAME "fenestrationController"
 #define PROGRAM_STAMP "\n\n" PROGRAM_NAME "_" PROGRAM_VERSION " (" PROGRAM_VERSION_DATE ")\nBuild date: " __DATE__ " " __TIME__ "\n"
 
@@ -94,6 +95,8 @@
 OSBos kernel(10);
 
 void setup() {
+  lib_Util::WatermarkStackRam();
+
   HAL::init_Serial();
   Serial.println(PROGRAM_STAMP);  
   HAL::init_CPU();
@@ -105,12 +108,15 @@ void setup() {
   kernel.AddThread(th_Blink::thread);
   kernel.AddThread(th_SerialConsole::thread);
   kernel.AddThread(th_WebServer::thread);
+  kernel.AddThread(th_DataLogger::thread);
 
   // Terminal Async Task Initialization
   kernel.AddThread(MechanicalSystem::tk_StopAll::Task);
   kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Positive::Task);
   kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Negative::Task);
   kernel.AddThread(th_test::thread);                      // Used for the example button widget
+
+  th_DataLogger::writeToLog("The system is booting up...");
 }
 
 void loop() {

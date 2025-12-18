@@ -4,13 +4,14 @@
 #include "th_DataLogger.h"
 #include <SerialConsole.h>  // https://github.com/actuvon/SerialConsole
 #include <P1AM.h>      // The public library for the AutomationDirect controller we are using  https://github.com/facts-engineering/P1AM
+#include "lib_Utils.h" // Used to help me spy on my RAM
 
 // Private members
 namespace {
   SerialConsoleConfig setupConsoleConfig(){
     SerialConsoleConfig config;
 
-    config.numCommands = 15;
+    config.numCommands = 20;
     config.maxFullLineLength = 100;
     config.maxArgLength = 80;
     config.maxNumArgs = 8;
@@ -221,6 +222,18 @@ namespace {
   void c_LogFile(){
     Serial.println(th_DataLogger::getCurrentLogFilePath());
   }
+
+  void c_StackPrints(){
+    lib_Util::PrintRamStackUseageToSerial();
+  }
+
+  void c_RamNow(){
+    lib_Util::PrintRamStatusToSerial();
+  }
+
+  void c_RamAdr(){
+    lib_Util::PrintRamAddresses();
+  }
 }
 
 namespace th_SerialConsole{
@@ -240,6 +253,9 @@ namespace th_SerialConsole{
     console.AddCommand("RTCset", c_RTC_set, "Set the date and time on the RTC.\nRTCset <YYYY> <MM> <DD> <HH> <MM> <SS>\nExample: RTCset 2025 12 05 15 21 00");
     console.AddCommand("logLine", c_Log_Line, "Add a line with a custom description to the day's log file, and show the full line in the console.\nlogLine <customTextToWrite>");
     console.AddCommand("logFile", c_LogFile, "What is the path of the current log file?");
+    console.AddCommand("stackPrints", c_StackPrints, "Check and see how much stack RAM we have trampled over throughout the lifetime of the program.");
+    console.AddCommand("ramNow", c_RamNow, "How much RAM are we using right now?");
+    console.AddCommand("ramAdr", c_RamAdr, "Print the addresses of where things are in RAM.");
   }
 
   int8_t tick(){

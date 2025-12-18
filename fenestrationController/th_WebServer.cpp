@@ -8,6 +8,7 @@
 #include "MechanicalSystem.h"   // Our business logic for controlling the mechanical system
 #include "HAL.h" 		        // Our hardware abstraction layer
 #include <functional>           // standard c++ library
+#include "th_DataLogger.h"
 
 extern OSBos kernel;
 extern Thread th_test::thread;
@@ -61,6 +62,10 @@ namespace {
 		else if (strcmp(key, "wDisplacement2") == 0){
 			success = true;
 			return String(HAL::getAnalogInputFloat(HAL::AnalogInput::DISPLACEMENT_2));
+		}
+		else if(strcmp(key, "wLastLogEntry") == 0){
+			success = true;
+			return th_DataLogger::getLastLogLine();
 		}
 		else if (strcmp(key, "wRTC") == 0){
 			success = true;
@@ -117,6 +122,10 @@ namespace {
 		else if(strcmp(key, "wExample_toggle") == 0){
 			success = true;
 			return String((int)ExampleAlarmToggleThingy);
+		}
+		else if(strcmp(key, "wExample_longLiveValue") == 0){
+			success = true;
+			return th_DataLogger::getLastLogLine();
 		}
 		else {
 			success = false;

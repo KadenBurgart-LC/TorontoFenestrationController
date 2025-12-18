@@ -8,11 +8,13 @@
 #include <stdio.h>     // Standard c++
 #include <string>      // Standard c++
 #include <avr/dtostrf.h> // Needed for dtostrf on SAMD/ARM cores
+#include <math.h> 	   // Standard c++, used for rounding
+#include "MechanicalSystem.h"
 
 namespace {
 
 	#define LOG_LINE_DATA_STR_LENGTH 200
-	#define LOG_BUFFER_LENGTH 5
+	#define LOG_BUFFER_LENGTH 20
 
 	struct LogEntry {
 		uint64_t fullTimestamp;				// Seconds since 1970-1-1 * 10 + number of entries made this second
@@ -67,6 +69,7 @@ namespace {
 		// Convert floats to character buffers.
 		// Increase all buffer sizes by 2 MORE bytes to allow for stupid.
 		char ts[15];
+		char tp[11]; // targetPressure (Pa)  PG100 goes to 9600 Pa. PG200 goes to 14390.0 Pa (7 chars +1 +1 )
 		char lowPres[8];  // lowPressureSensor (Pa) (one decimal place) (4 chars +1 for "-", +1 for "\0")
 		char dis1[9]; // displacement1 (mm) (2 decimal places) (5 chars +1 for "-", +1 for "\0")
 		char dis2[9]; // displacement2 (mm) (2 decimal places) (5 chars +1 for "-", +1 for "\0")
@@ -76,39 +79,40 @@ namespace {
 		char ambT[8]; // Ambient air temperature (°C) (one decimal place) (4 chars +1 for "-", +1 for "\0")
 		char ambH[7]; // Ambient humidity (%) (one decimal place) (4 chars +1 for "\0")
 		_uint64ToString(entry.fullTimestamp, ts);
-		dtostrf(75.8, 0, 1, lowPres);
-		dtostrf(99.04, 0, 2, dis1);
-		dtostrf(99.27, 0, 2, dis2);
-		dtostrf(1990.72, 0, 2, lfeD);
-		dtostrf(102.88, 0, 2, lfeA);
-		dtostrf(25.4, 0, 1, lfeT);
-		dtostrf(21.2, 0, 1, ambT);
-		dtostrf(38.1, 0, 1, ambH);
+		dtostrf(MechanicalSystem::GetTargetPressure(), 0, 1, tp);
+		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_LOW), 0, 1, lowPres);
+		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::DISPLACEMENT_1), 0, 2, dis1);
+		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::DISPLACEMENT_2), 0, 2, dis2);
+		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_LFE_DIFFERENTIAL), 0, 2, lfeD);
+		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_LFE_ABSOLUTE), 0, 2, lfeA);
+		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::TEMP_LFE), 0, 1, lfeT);
+		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::TEMP_AMB), 0, 1, ambT);
+		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::HUMIDITY_AMB), 0, 1, ambH);
 
 		//Serial.println("just before snprintf");
 
 		int n = snprintf(
-			entry.dataLine,
-			LOG_LINE_DATA_STR_LENGTH,
-			"%s,%s,%i,%s,%i,%i,%s,%s,%s,%s,%s,%s,%s,%i,%i,%i,%i,%i,",
-			ts, // (11 chars)
-			HAL::RTC_GetDateTime().c_str(), // (19 chars)
-			14390,  // targetPressure (Pa)  PG100 goes to 9600 Pa. PG200 goes to 14390 Pa (5 chars)
-			lowPres, // lowPressureSensor (Pa) (one decimal place) (4 chars)
-			9500,  // medPressureSensor (Pa) (no decimal places) (5 chars)
-			14000,  // highPressureSensor (Pa) (5 chars)
-			dis1, // displacement1 (mm) (5 chars)
-			dis2, // displacement2 (mm) (5 chars)
-			lfeD, // LFE differential pressure (Pa) (two decimal places) (7 chars)
-			lfeA, // LFE abs pressure (kPa) (two decimal places) (6 chars)
-			lfeT, // LFE air temperature (°C) (one decimal place) (4 chars)
-			ambT, // Ambient air temperature (°C) (one decimal place) (4 chars)
-			ambH, // Ambient humidity (%) (one decimal place) (4 chars)
-			0, // LP_dir (-1 for negative, 1 for positive, X for undefined) (2 chars)
-			-1, // HP_dir (-1 for negative, 1 for positive, X for undefined) (2 chars)
-			0, // LP_blower_on (0 or 1) (1 chars)
-			1, // HP_blower_on (0 or 1) (1 chars)
-			0 // water pump on (0 or 1) (1 chars)
+				entry.dataLine,
+				LOG_LINE_DATA_STR_LENGTH,
+				"%s,%s,%s,%s,%i,%i,%s,%s,%s,%s,%s,%s,%s,%i,%i,%i,%i,%i,",
+				ts, // (11 chars)
+				HAL::RTC_GetDateTime().c_str(), // (19 chars)
+				tp,  // targetPressure (Pa)  PG100 goes to 9600 Pa. PG200 goes to 14390 Pa (5 chars)
+				lowPres, // lowPressureSensor (Pa) (one decimal place) (4 chars)
+				(int)round(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_MED)),  // medPressureSensor (Pa) (no decimal places) (5 chars)
+				(int)round(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_HIGH)), // highPressureSensor (Pa) (5 chars)
+				dis1, // displacement1 (mm) (5 chars)
+				dis2, // displacement2 (mm) (5 chars)
+				lfeD, // LFE differential pressure (Pa) (two decimal places) (7 chars)
+				lfeA, // LFE abs pressure (kPa) (two decimal places) (6 chars)
+				lfeT, // LFE air temperature (°C) (one decimal place) (4 chars)
+				ambT, // Ambient air temperature (°C) (one decimal place) (4 chars)
+				ambH, // Ambient humidity (%) (one decimal place) (4 chars)
+				MechanicalSystem::GetLowPressureValveConfiguration(), // LP_dir (0 for negative, 1 for positive, -1 for undefined) (2 chars)
+				MechanicalSystem::GetHighPressureValveConfiguration(), // HP_dir (0 for negative, 1 for positive, -1 for undefined) (2 chars)
+				(int)HAL::getDigitalOutputState(HAL::DigitalOutput::LEAKAGE_BLOWER_POWER), // LP_blower_on (0 or 1) (1 chars)
+				(int)HAL::getDigitalOutputState(HAL::DigitalOutput::STRUCTURAL_BLOWER_POWER), // HP_blower_on (0 or 1) (1 chars)
+				(int)HAL::getDigitalOutputState(HAL::DigitalOutput::WATER_PUMP_POWER) // water pump on (0 or 1) (1 chars)
 			);
 		entry.note = adtNote;
 
@@ -119,8 +123,6 @@ namespace {
 		String logFilePath = _getCurrentLogFilePath();
 		
 		HAL::SD_EnsureDirExists("logs");
-
-		Serial.println(logFilePath);
 		
 		if(HAL::SD_AppendFile(fullLine.c_str(), logFilePath.c_str())) return 1; // success
 		else return -1; // action failed
@@ -136,14 +138,17 @@ namespace th_DataLogger {
 		return 1;
 	}
 
+	// Add a new "standard row" to the data log
 	uint8_t logStandardDataRow(){
 		return _logDataRow();
 	}
 
+	// Add some special note to the data log. We put this note in a seperate column at the end of the normal log data to make data processing easier for our poor technicians
 	uint8_t writeToLog(String str){
 		return _logDataRow(str);
 	}
 
+	// Return the last line which was logged
 	String getLastLogLine(){
 		uint8_t lastIX = (_bufferIX == 0) ? LOG_BUFFER_LENGTH - 1 : _bufferIX - 1;
 
@@ -152,6 +157,44 @@ namespace th_DataLogger {
 		String lastLine = String(lastEntry.dataLine) + lastEntry.note;
 
 		return lastLine;
+	}
+
+	// Return a string with all log rows that were generated AFTER this timestamp
+	String getLogsSince(uint64_t timeStamp){
+		int firstLogIxAfter = -1;
+		String allLogsSinceStamp = "";
+		int numLogs = 0;
+		int noteChars = 0;
+
+		// Find the earliest IX in the buffer which came after the timeStamp requested
+		for(int i=0; i<LOG_BUFFER_LENGTH; i++){
+			uint8_t seekIx = (_bufferIX - i + LOG_BUFFER_LENGTH) % LOG_BUFFER_LENGTH;
+
+			if(_logBuffer[seekIx].fullTimestamp > timeStamp){
+				firstLogIxAfter = seekIx;
+				numLogs++;
+				noteChars += _logBuffer[seekIx].note.length();
+			}
+			else break;
+		}
+
+		if(firstLogIxAfter == -1) return "";
+		else{
+			// Reserve all the memory we are going to need in this thing at once so that this doesn't jump around reallocating
+			// and bombing the heap.
+			allLogsSinceStamp.reserve(numLogs * (LOG_LINE_DATA_STR_LENGTH + 8) + noteChars); // Throwing in an extra 8 bytes per line
+		}
+
+		// Start adding log entries to the return string starting from the first entry that came after the requested timeStamp
+		for(int i=0; i<LOG_BUFFER_LENGTH; i++){
+			uint8_t seekIx = (firstLogIxAfter + i + LOG_BUFFER_LENGTH) % LOG_BUFFER_LENGTH;
+
+			if(_logBuffer[seekIx].fullTimestamp > timeStamp) 
+				allLogsSinceStamp += String(_logBuffer[seekIx].dataLine) + _logBuffer[seekIx].note + "\n";
+			else break;
+		}
+
+		return allLogsSinceStamp;
 	}
 
 	String getCurrentLogFilePath(){ return _getCurrentLogFilePath(); }

@@ -32,6 +32,10 @@ namespace HAL {
 		PRESSURE_WINDOW_MED,
 		PRESSURE_WINDOW_HIGH,
 		PRESSURE_LFE_DIFFERENTIAL,
+		PRESSURE_LFE_ABSOLUTE,
+		TEMP_LFE,
+		TEMP_AMB,
+		HUMIDITY_AMB,
 		DISPLACEMENT_1,
 		DISPLACEMENT_2,
 		VALVE_C7_8, // leakage system cavity vent (main control valve) feedback signal

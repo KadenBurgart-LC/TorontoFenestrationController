@@ -78,6 +78,15 @@
             <div class="dataField"><input type="text" /></div>
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
           </div>
+        </div>
+
+        <div class="example widget long" id="wExample_longLiveValue">
+          <div class="long-live-value">
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="label">Long Live Value</div>
+            <div class="go"><img src="./assets/Go.png"/></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
+          </div>
         </div> -->
 
 
@@ -121,14 +130,14 @@
             <div class="send"><img src="./assets/Send.png"/></div>
             <div class="label">Target Pressure (Pa)</div>
           </div>
-        </div><div class="widget" id="wLowPressure">
-          <div class="live-short-value">
+        </div>
+        <div class="widget" id="wTmpAmb">
+          <div class="smart-short-value">
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
             <div class="dataField"><input type="text" disabled="" /></div>
-            <div class="go"><img src="./assets/Go.png"/></div>
-            <div class="label">Low Pressure Sensor (Pa)</div>
+            <div class="label">Ambient Temperature (°C)</div>
           </div>
-        </div>
+        </div> 
 
         <div class="widget" id="wMedPressure">
           <div class="live-short-value">
@@ -166,6 +175,22 @@
 
         <div id="LiveGraph"></div>
 
+        <div class="widget" id="wLowPressure">
+          <div class="live-short-value">
+            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="dataField"><input type="text" disabled="" /></div>
+            <div class="go"><img src="./assets/Go.png"/></div>
+            <div class="label">Low Pressure Sensor (Pa)</div>
+          </div>
+        </div>
+        <div class="widget" id="wWaterPump">
+          <div class="toggle">
+            <div class="refresh"><img src="./assets/Refresh2.png" /></div>
+            <div class="toggleSlider"><center><div class="sit"></div><div class="slide"></div></center></div>
+            <div class="label">Water Pump</div>
+          </div>
+        </div>
+
         <div class="widget" id="wHPvalvesDirection">
           <div class="toggle">
             <div class="refresh"><img src="./assets/Refresh2.png" /></div>
@@ -181,45 +206,30 @@
           </div>
         </div>
 
-        <div class="widget" id="wWaterPump">
+        <div class="widget" id="wHpBlower">
           <div class="toggle">
             <div class="refresh"><img src="./assets/Refresh2.png" /></div>
             <div class="toggleSlider"><center><div class="sit"></div><div class="slide"></div></center></div>
-            <div class="label">Water Pump</div>
+            <div class="label">High Pressure Blower</div>
+          </div>
+        </div>
+        <div class="widget" id="wLpBlower">
+          <div class="toggle">
+            <div class="refresh"><img src="./assets/Refresh2.png" /></div>
+            <div class="toggleSlider"><center><div class="sit"></div><div class="slide"></div></center></div>
+            <div class="label">Low Pressure Blower</div>
           </div>
         </div>
 
-        <div class="widget">Pump Timer Widget</div>
-
-        <div class="widget" id="wPropValve1">
-          <div class="smart-short-value">
+        <div class="widget long" id="wLastLogEntry">
+          <div class="long-live-value">
             <div class="refresh"><img src="./assets/Refresh2.png"/></div>
+            <div class="label">Logger</div>
+            <div class="go"><img src="./assets/Go.png"/></div>
             <div class="dataField"><input type="text" disabled="" /></div>
-            <div class="label">Proportional Valve 1</div>
           </div>
         </div>
-        <div class="widget" id="w14">
-          <div class="alarm">
-            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
-            <div class="indicator"><img src="./assets/Warn.png"/></div>
-            <div class="label">Proportional Valve 1 Fault</div>
-          </div>
-        </div>
-
-        <div class="widget" id="w13">
-          <div class="smart-short-value">
-            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
-            <div class="dataField"><input type="text" disabled="" /></div>
-            <div class="label">Proportional Valve 2</div>
-          </div>
-        </div>
-        <div class="widget" id="w15">
-          <div class="alarm">
-            <div class="refresh"><img src="./assets/Refresh2.png"/></div>
-            <div class="indicator"><img src="./assets/Warn.png"/></div>
-            <div class="label">Proportional Valve 2 Fault</div>
-          </div>
-        </div>
+        
 
       </div>
     </div>
@@ -229,6 +239,7 @@
   <script src="./scripts/main.js"></script>
   <script src="./scripts/widgets_common.js"></script>
   <script src="./scripts/widgets_live-short-value.js"></script>
+  <script src="./scripts/widgets_long-live-value.js"></script>
   <script src="./scripts/widgets_smart-short-value.js"></script>
   <script src="./scripts/widgets_value-sender.js"></script>
   <script src="./scripts/widgets_toggle.js"></script>
