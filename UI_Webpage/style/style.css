@@ -80,7 +80,11 @@ div {
   display:grid; 
   grid-template-columns: 35px 145px 35px 1fr;
 }
-
+.widget .long-live-value .label {
+  padding: 9px 0 0 5px;
+  font-weight: bold;
+  text-align: center;
+}
 
 
 

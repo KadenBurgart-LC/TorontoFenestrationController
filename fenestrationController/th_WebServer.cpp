@@ -343,6 +343,7 @@ namespace th_WebServer{
 		Jarvis.On("/wHighPressure", routes::WidgetHandler_LiveShortValue("wHighPressure"));
 		Jarvis.On("/wDisplacement1", routes::WidgetHandler_LiveShortValue("wDisplacement1"));
 		Jarvis.On("/wDisplacement2", routes::WidgetHandler_LiveShortValue("wDisplacement2"));
+		Jarvis.On("/wLastLogEntry", routes::WidgetHandler_LiveShortValue("wLastLogEntry"));
 
 		Jarvis.On("/wWaterPump", routes::WidgetHandler_Toggle("wWaterPump"));
 		Jarvis.On("/wHPvalvesDirection", routes::WidgetHandler_Toggle_Delayed("wHPvalvesDirection", th_test::thread, th_test::thread));
