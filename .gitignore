@@ -6,3 +6,7 @@ build/
 *.hex
 *.bin
 *.map
+
+# Slave files
+CLAUDE_CONTEXT.md
+PROJECT_CONTEXT.md

@@ -44,16 +44,35 @@ const liveDataSubscribers = {};
 
 function subscribeToLiveDataRequester(keyStr, callbackFunc){
   if(liveDataSubscribers[keyStr] == undefined){
-    liveDataSubscribers[keyStr] = callbackFunc;
+    liveDataSubscribers[keyStr] = [callbackFunc];
   }
   else {
-    console.warn('LiveDataRequester: ${keyStr} attempted to subscribe to the LiveDataRequester, but they are already subscribed.');
+    if(liveDataSubscribers[keyStr].includes(callbackFunc)){
+      console.warn('LiveDataRequester: ${keyStr} attempted to subscribe to the LiveDataRequester, but they are already subscribed.');
+    }
+    else {
+      liveDataSubscribers[keyStr].push(callbackFunc);
+    }
   }
 }
 
-function unsubscribeFromLiveDataRequester(keyStr){
+function unsubscribeFromLiveDataRequester(keyStr, callbackFunc){
   if(liveDataSubscribers[keyStr] !== undefined){
-    delete liveDataSubscribers[keyStr];
+    if(callbackFunc === undefined){
+      console.warn('LiveDataRequester: ${keyStr} attempted to unsubscribe from the LiveDataRequester, but no callback function was provided.');
+    }
+    else {
+      const index = liveDataSubscribers[keyStr].indexOf(callbackFunc);
+      if(index !== -1){
+        liveDataSubscribers[keyStr].splice(index, 1);
+        if(liveDataSubscribers[keyStr].length === 0){
+          delete liveDataSubscribers[keyStr];
+        }
+      }
+      else {
+        console.warn('LiveDataRequester: ${keyStr} attempted to unsubscribe from the LiveDataRequester, but they are not in the subscriber list.');
+      }
+    }
   }
   else {
     console.warn('LiveDataRequester: ${keyStr} attempted to unsubscribe from the LiveDataRequester, but they are not in the subscriber list.');
@@ -68,10 +87,15 @@ var liveDataRequester_TimerEventHandler = function(){
   $.post(rootUrl + '/liveDataPacketRequest',
       JSON.stringify(keysToRequest),
       function(data){
-        for (const subscriber in liveDataSubscribers) {
-          const callbackFunc = liveDataSubscribers[subscriber];
+        for (const key in liveDataSubscribers) {
+          const callbacks = liveDataSubscribers[key];
+          const value = data[key];
 
-          if(callbackFunc) callbackFunc(data);
+          if(callbacks){
+            for(let i = 0; i < callbacks.length; i++){
+              if(callbacks[i]) callbacks[i](value);
+            }
+          }
         }
       },
       'json'
