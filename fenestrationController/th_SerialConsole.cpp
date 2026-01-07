@@ -11,7 +11,7 @@ namespace {
   SerialConsoleConfig setupConsoleConfig(){
     SerialConsoleConfig config;
 
-    config.numCommands = 20;
+    config.numCommands = 40;
     config.maxFullLineLength = 100;
     config.maxArgLength = 80;
     config.maxNumArgs = 8;
@@ -213,14 +213,18 @@ namespace {
   }
 
   void c_Log_Line(){
-    bool success = th_DataLogger::writeToLog(String(console.Arguments[1]));
+    bool success = th_DataLogger::writeToLog(console.Arguments[1]);
     Serial.println(th_DataLogger::getLastLogLine());
-
     if(!success) Serial.println("Write action failed.");
   }
 
   void c_LogFile(){
     Serial.println(th_DataLogger::getCurrentLogFilePath());
+  }
+
+  void c_LogsSince(){
+    uint64_t timestamp = atol(console.Arguments[1]);
+    
   }
 
   void c_StackPrints(){
@@ -253,6 +257,7 @@ namespace th_SerialConsole{
     console.AddCommand("RTCset", c_RTC_set, "Set the date and time on the RTC.\nRTCset <YYYY> <MM> <DD> <HH> <MM> <SS>\nExample: RTCset 2025 12 05 15 21 00");
     console.AddCommand("logLine", c_Log_Line, "Add a line with a custom description to the day's log file, and show the full line in the console.\nlogLine <customTextToWrite>");
     console.AddCommand("logFile", c_LogFile, "What is the path of the current log file?");
+    console.AddCommand("logsSince", c_LogsSince, "Get all logs since a certain timestamp.\nlogsSince <timestamp>\n<timestamp> is a uint64_t UNIX timestamp.");
     console.AddCommand("stackPrints", c_StackPrints, "Check and see how much stack RAM we have trampled over throughout the lifetime of the program.");
     console.AddCommand("ramNow", c_RamNow, "How much RAM are we using right now?");
     console.AddCommand("ramAdr", c_RamAdr, "Print the addresses of where things are in RAM.");

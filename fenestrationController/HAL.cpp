@@ -395,26 +395,12 @@ namespace HAL {
 	//tmElements_t RTC_GetDateTime_Elements(){ return PCF8563_RTC.getEpoch(); }
 
 	/* A function to recall the current date and time from the Real-Time Clock */
-	String RTC_GetDateTime(){
-		String dateTimeStr = "";
+	const char* RTC_GetDateTime(){
+		static char dateTimeStr[24];
 		time_t t = PCF8563_RTC.getEpoch();
 
-		dateTimeStr += year(t);
-		dateTimeStr += "-";
-		dateTimeStr += (month(t) < 10) ? "0" : "";
-		dateTimeStr += month(t);
-		dateTimeStr += "-";
-		dateTimeStr += (day(t) < 10) ? "0" : "";
-		dateTimeStr += day(t);
-		dateTimeStr += " ";
-		dateTimeStr += (hour(t) < 10) ? "0" : "";
-		dateTimeStr += hour(t);
-		dateTimeStr += ":";
-		dateTimeStr += (minute(t) < 10) ? "0" : "";
-		dateTimeStr += minute(t);
-		dateTimeStr += ":";
-		dateTimeStr += (second(t) < 10) ? "0" : "";
-		dateTimeStr += second(t);
+		snprintf(dateTimeStr, sizeof(dateTimeStr), "%04d-%02d-%02d %02d:%02d:%02d",
+			year(t), month(t), day(t), hour(t), minute(t), second(t));
 
 		return dateTimeStr;
 	}
@@ -425,30 +411,21 @@ namespace HAL {
 	}
 
 	/* Get the date in YYYY-MM-DD format, ignoring time. */
-	String RTC_GetDate(){
-		String dateStr = "";
+	const char* RTC_GetDate(){
+		static char dateStr[12];
 		time_t t = PCF8563_RTC.getEpoch();
 
-		dateStr += year(t);
-		dateStr += "-";
-		dateStr += (month(t) < 10) ? "0" : "";
-		dateStr += month(t);
-		dateStr += "-";
-		dateStr += (day(t) < 10) ? "0" : "";
-		dateStr += day(t);
+		snprintf(dateStr, sizeof(dateStr), "%04d-%02d-%02d", year(t), month(t), day(t));
 
 		return dateStr;
 	}
 
-	String RTC_GetDate_Safe(){
-		String dateStr = "";
+	/* Get the date in YYYYMMDD format, ignoring time. The SD library can't handle dashes in file names. */
+	const char* RTC_GetDate_Safe(){
+		static char dateStr[10];
 		time_t t = PCF8563_RTC.getEpoch();
 
-		dateStr += year(t);
-		dateStr += (month(t) < 10) ? "0" : "";
-		dateStr += month(t);
-		dateStr += (day(t) < 10) ? "0" : "";
-		dateStr += day(t);
+		snprintf(dateStr, sizeof(dateStr), "%04d%02d%02d", year(t), month(t), day(t));
 
 		return dateStr;
 	}

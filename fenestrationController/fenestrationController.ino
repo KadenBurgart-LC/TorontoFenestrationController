@@ -95,30 +95,30 @@
 OSBos kernel(10);
 
 void setup() {
-  lib_Util::WatermarkStackRam();
+    lib_Util::WatermarkStackRam();
 
-  HAL::init_Serial();
-  Serial.println(PROGRAM_STAMP);  
-  HAL::init_CPU();
-  HAL::init_P1Slots();
+    HAL::init_Serial();
+    Serial.println(PROGRAM_STAMP);  
+    HAL::init_CPU();
+    HAL::init_P1Slots();
 
-  th_SerialConsole::initialize();
-  th_WebServer::initialize();
-  
-  kernel.AddThread(th_Blink::thread);
-  kernel.AddThread(th_SerialConsole::thread);
-  kernel.AddThread(th_WebServer::thread);
-  kernel.AddThread(th_DataLogger::thread);
+    th_SerialConsole::initialize();
+    th_WebServer::initialize();
 
-  // Terminal Async Task Initialization
-  kernel.AddThread(MechanicalSystem::tk_StopAll::Task);
-  kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Positive::Task);
-  kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Negative::Task);
-  kernel.AddThread(th_test::thread);                      // Used for the example button widget
+    kernel.AddThread(th_Blink::thread);
+    kernel.AddThread(th_SerialConsole::thread);
+    kernel.AddThread(th_WebServer::thread);
+    kernel.AddThread(th_DataLogger::thread);
 
-  th_DataLogger::writeToLog("The system is booting up...");
+    //Terminal Async Task Initialization
+    kernel.AddThread(MechanicalSystem::tk_StopAll::Task);
+    kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Positive::Task);
+    kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Negative::Task);
+    kernel.AddThread(th_test::thread);                      // Used for the example button widget
+
+    th_DataLogger::writeToLog("The system is booting up...");
 }
 
 void loop() {
-  kernel.RunKernel();
+    kernel.RunKernel();
 }

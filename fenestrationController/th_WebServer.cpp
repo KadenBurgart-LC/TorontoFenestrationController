@@ -222,7 +222,6 @@ namespace {
 			}
 			else lib_Eth::respond_405(client, F("The live data packet request endpoint only accepts POST requests."));
 		}
-
 		
 		// Request handler builders for widgets
 		lib_Eth::RequestHandler WidgetHandler_Toggle_Delayed(const char* widgetId, Thread& onTask, Thread& offTask){

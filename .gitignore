@@ -1,0 +1,8 @@
+# Arduino CLI build directory
+build/
+
+# Arduino IDE build files (if any appear)
+*.elf
+*.hex
+*.bin
+*.map

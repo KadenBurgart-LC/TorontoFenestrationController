@@ -1,4 +1,4 @@
-/*  *****     *****     *****     *****  LIVE GRAPH  *****     *****     *****     *****  */
+/*  *****     *****     *****     *****  LIVE GRAPH SETUP  *****     *****     *****     *****  */
 
 var LiveGraph = {
   init : function() {
@@ -122,7 +122,15 @@ LiveGraph.render();
 
 $(window).resize(() => LiveGraph.render() );
 
-var pressureUpdater = function(){
+/*  *****     *****     *****     ***** /LIVE GRAPH SETUP *****     *****     *****     *****  */
+
+
+
+
+
+/*  *****     *****     *****     ***** LIVE GRAPH HOOKUP / REGISTRATION *****     *****     *****     *****  */
+
+var graphUpdater = function(){
   var refreshImage = $('#w6').find('.refresh>img');
   refreshImage.unbind('mouseenter mouseleave');
   refreshImage.attr('src', './assets/spinner.gif');
@@ -147,4 +155,4 @@ var pressureUpdater = function(){
       });
 };
 
-/*  *****     *****     *****     ***** /LIVE GRAPH  *****     *****     *****     *****  */
+/*  *****     *****     *****     ***** /LIVE GRAPH HOOKUP / REGISTRATION *****     *****     *****     *****  */

@@ -5,30 +5,34 @@
 #include <Arduino.h>    // Used for strings
 
 namespace th_DataLogger{
+    // Must run before ticking
+    //void initialize(); // I don't think we need this?
 
-	// Must run before ticking
-	//void initialize(); // I don't think we need this?
+    // The main function to be called by the kernel
+    int8_t tick();
 
-	// The main function to be called by the kernel
-	int8_t tick();
+    inline Thread thread(tick, 1000);
 
-	inline Thread thread(tick, 1000);
+    // Add a new "standard row" to the data log
+    uint8_t logStandardDataRow();
 
-	// Add a new "standard row" to the data log
-	uint8_t logStandardDataRow();
+    // Add some special note to the data log. We put this note in a seperate column at the end of the normal log data to make data processing easier for our poor technicians
+    uint8_t writeToLog(const char* str);
 
-	// Add some special note to the data log. We put this note in a seperate column at the end of the normal log data to make data processing easier for our poor technicians
-	uint8_t writeToLog(String str);
+    // Return the last line which was logged
+    const char* getLastLogLine();
 
-	// Return the last line which was logged
-	String getLastLogLine();
+    // Return a string with all log rows that were generated AFTER this timestamp
+    const char* getLogsSince(uint64_t timeStamp);
 
-	// Return a string with all log rows that were generated AFTER this timestamp
-	String getLogsSince(uint64_t timeStamp);
+    // Return the path of the log file that is currently active (based on the day's date)
+    const char* getCurrentLogFilePath();
 
-	// Return the path of the log file that is currently active (based on the day's date)
-	String getCurrentLogFilePath();
+    // Start the logger
+    void Start();
 
+    // Stop the logger IF the system isn't doing anything important. Return true if stopped.
+    bool Stop();
 }
 
 #endif
@@ -64,9 +68,6 @@ some sort of error.
 * DONE: We will NOT need a function like streamArchivedLogFile(YYYY, MM, DD) so that we can download the logs
 from past days. Don't use this. INSTEAD: We will be needing a way of serving SD card files through the 
 WebServer anyway, so use that interface to do this job.
-
-* DONE: We NOT need streamLogsSince(timestamp) function. If the user needs data from earlier in the day,
-make them download the whole day's log file using the WebServer->ServeSdFile thingy.
 
 
 */

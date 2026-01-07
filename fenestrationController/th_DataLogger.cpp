@@ -13,13 +13,13 @@
 
 namespace {
 
-	#define LOG_LINE_DATA_STR_LENGTH 200
-	#define LOG_BUFFER_LENGTH 20
+	#define LOG_LINE_DATA_STR_LENGTH 400 // 200 chars for the main portion of the log and another 200 chars for the note
+	#define LOG_BUFFER_LENGTH 20         // We store the last 20 log rows in RAM
+	#define LOG_FILE_MAX_PATH_LENGTH 200 // The log file path on the SD card can be up to 200 chars long
 
 	struct LogEntry {
 		uint64_t fullTimestamp;				// Seconds since 1970-1-1 * 10 + number of entries made this second
 		char dataLine[LOG_LINE_DATA_STR_LENGTH]; // All characters (including timestamp) EXCEPT the user note
-		String note;
 	};
 
 	LogEntry _logBuffer[LOG_BUFFER_LENGTH];
@@ -27,10 +27,10 @@ namespace {
 
 	uint64_t _lastTimestamp = 0;
 
-	String _getCurrentLogFilePath(){
-		String logFilePath = "logs/";
-		logFilePath += HAL::RTC_GetDate_Safe();
-		logFilePath += ".csv";
+	const char* _getCurrentLogFilePath(){
+		static char logFilePath[LOG_FILE_MAX_PATH_LENGTH]; 
+
+		snprintf(logFilePath, sizeof(logFilePath), "logs/%s.csv", HAL::RTC_GetDate_Safe());
 
 		return logFilePath;
 	}
@@ -53,7 +53,7 @@ namespace {
 	    buf[i] = '\0';
 	}
 
-	uint8_t _logDataRow(String adtNote = "_"){
+	uint8_t _logDataRow(const char* adtNote = "_"){
 		LogEntry &entry = _logBuffer[_bufferIX++];
 
 		if (_bufferIX >= LOG_BUFFER_LENGTH) _bufferIX = 0;
@@ -94,9 +94,9 @@ namespace {
 		int n = snprintf(
 				entry.dataLine,
 				LOG_LINE_DATA_STR_LENGTH,
-				"%s,%s,%s,%s,%i,%i,%s,%s,%s,%s,%s,%s,%s,%i,%i,%i,%i,%i,",
+				"%s,%s,%s,%s,%i,%i,%s,%s,%s,%s,%s,%s,%s,%i,%i,%i,%i,%i,%s\n",
 				ts, // (11 chars)
-				HAL::RTC_GetDateTime().c_str(), // (19 chars)
+				HAL::RTC_GetDateTime(), // (19 chars)
 				tp,  // targetPressure (Pa)  PG100 goes to 9600 Pa. PG200 goes to 14390 Pa (5 chars)
 				lowPres, // lowPressureSensor (Pa) (one decimal place) (4 chars)
 				(int)round(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_MED)),  // medPressureSensor (Pa) (no decimal places) (5 chars)
@@ -112,19 +112,18 @@ namespace {
 				MechanicalSystem::GetHighPressureValveConfiguration(), // HP_dir (0 for negative, 1 for positive, -1 for undefined) (2 chars)
 				(int)HAL::getDigitalOutputState(HAL::DigitalOutput::LEAKAGE_BLOWER_POWER), // LP_blower_on (0 or 1) (1 chars)
 				(int)HAL::getDigitalOutputState(HAL::DigitalOutput::STRUCTURAL_BLOWER_POWER), // HP_blower_on (0 or 1) (1 chars)
-				(int)HAL::getDigitalOutputState(HAL::DigitalOutput::WATER_PUMP_POWER) // water pump on (0 or 1) (1 chars)
+				(int)HAL::getDigitalOutputState(HAL::DigitalOutput::WATER_PUMP_POWER), // water pump on (0 or 1) (1 chars)
+				adtNote
 			);
-		entry.note = adtNote;
 
 		//Serial.println(n);
 		if(n <= 0 || n >= (int)sizeof(entry.dataLine)) return -1;
 
-		String fullLine = String(entry.dataLine) + adtNote + "\n";
-		String logFilePath = _getCurrentLogFilePath();
+		const char* logFilePath = _getCurrentLogFilePath();
 		
 		HAL::SD_EnsureDirExists("logs");
 		
-		if(HAL::SD_AppendFile(fullLine.c_str(), logFilePath.c_str())) return 1; // success
+		if(HAL::SD_AppendFile(entry.dataLine, logFilePath)) return 1; // success
 		else return -1; // action failed
 	}
 }
@@ -144,58 +143,35 @@ namespace th_DataLogger {
 	}
 
 	// Add some special note to the data log. We put this note in a seperate column at the end of the normal log data to make data processing easier for our poor technicians
-	uint8_t writeToLog(String str){
+	uint8_t writeToLog(const char* str){
 		return _logDataRow(str);
 	}
 
 	// Return the last line which was logged
-	String getLastLogLine(){
+	const char* getLastLogLine(){
 		uint8_t lastIX = (_bufferIX == 0) ? LOG_BUFFER_LENGTH - 1 : _bufferIX - 1;
-
-		LogEntry lastEntry = _logBuffer[lastIX];
-
-		String lastLine = String(lastEntry.dataLine) + lastEntry.note;
-
-		return lastLine;
+		return _logBuffer[lastIX].dataLine;
 	}
 
 	// Return a string with all log rows that were generated AFTER this timestamp
-	String getLogsSince(uint64_t timeStamp){
-		int firstLogIxAfter = -1;
-		String allLogsSinceStamp = "";
-		int numLogs = 0;
-		int noteChars = 0;
+	const char* getLogsSince(uint64_t timeStamp){
+		static char logBufferDump[LOG_LINE_DATA_STR_LENGTH * LOG_BUFFER_LENGTH];
+		logBufferDump[0] = '\0';
 
-		// Find the earliest IX in the buffer which came after the timeStamp requested
+		char* writePtr = logBufferDump;
+		int remainingSpace = sizeof(logBufferDump);
 		for(int i=0; i<LOG_BUFFER_LENGTH; i++){
-			uint8_t seekIx = (_bufferIX - i + LOG_BUFFER_LENGTH) % LOG_BUFFER_LENGTH;
-
+			uint8_t seekIx = (_bufferIX + i) % LOG_BUFFER_LENGTH;
 			if(_logBuffer[seekIx].fullTimestamp > timeStamp){
-				firstLogIxAfter = seekIx;
-				numLogs++;
-				noteChars += _logBuffer[seekIx].note.length();
+				int written = snprintf(writePtr, remainingSpace, "%s", _logBuffer[seekIx].dataLine);
+				if(written > 0 && written < remainingSpace){
+					writePtr += written;
+					remainingSpace -= written;
+				} else break;
 			}
-			else break;
 		}
-
-		if(firstLogIxAfter == -1) return "";
-		else{
-			// Reserve all the memory we are going to need in this thing at once so that this doesn't jump around reallocating
-			// and bombing the heap.
-			allLogsSinceStamp.reserve(numLogs * (LOG_LINE_DATA_STR_LENGTH + 8) + noteChars); // Throwing in an extra 8 bytes per line
-		}
-
-		// Start adding log entries to the return string starting from the first entry that came after the requested timeStamp
-		for(int i=0; i<LOG_BUFFER_LENGTH; i++){
-			uint8_t seekIx = (firstLogIxAfter + i + LOG_BUFFER_LENGTH) % LOG_BUFFER_LENGTH;
-
-			if(_logBuffer[seekIx].fullTimestamp > timeStamp) 
-				allLogsSinceStamp += String(_logBuffer[seekIx].dataLine) + _logBuffer[seekIx].note + "\n";
-			else break;
-		}
-
-		return allLogsSinceStamp;
+		return logBufferDump;
 	}
 
-	String getCurrentLogFilePath(){ return _getCurrentLogFilePath(); }
+	const char* getCurrentLogFilePath(){ return _getCurrentLogFilePath(); }
 }

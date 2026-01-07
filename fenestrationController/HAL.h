@@ -135,15 +135,15 @@ namespace HAL {
 	//tmElements_t RTC_GetDateTime_Elements();
 
 	/* A function to recall the current date and time from the Real-Time Clock */
-	String RTC_GetDateTime();
+	const char* RTC_GetDateTime();
 
 	/* A function to recall the current date/time in terms of seconds since Jan 1 1970 (unix timestamp) */
 	time_t RTC_GetEpoch();
 
 	/* Get the date in YYYY-MM-DD format, ignoring time. */
-	String RTC_GetDate();
+	const char* RTC_GetDate();
 
-	String RTC_GetDate_Safe();
+	const char* RTC_GetDate_Safe();
 }
 
 #endif
