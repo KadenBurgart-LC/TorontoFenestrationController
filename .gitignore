@@ -7,6 +7,9 @@ build/
 *.bin
 *.map
 
+# Github link
+*.url
+
 # Slave files
 CLAUDE_CONTEXT.md
 PROJECT_STATUS.md
