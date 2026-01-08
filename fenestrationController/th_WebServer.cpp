@@ -45,23 +45,23 @@ namespace {
 		}
 		else if (strcmp(key, "wLowPressure") == 0){ 
 			success = true;
-			return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_LOW)); 
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_LOW)); 
 		}
 		else if (strcmp(key, "wMedPressure") == 0){
 			success = true;
-			return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_MED));
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_MED));
 		}
 		else if (strcmp(key, "wHighPressure") == 0){
 			success = true;
-			return String(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_HIGH));
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_HIGH));
 		}
 		else if (strcmp(key, "wDisplacement1") == 0){
 			success = true;
-			return String(HAL::getAnalogInputFloat(HAL::AnalogInput::DISPLACEMENT_1));
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::DISPLACEMENT_1));
 		}
 		else if (strcmp(key, "wDisplacement2") == 0){
 			success = true;
-			return String(HAL::getAnalogInputFloat(HAL::AnalogInput::DISPLACEMENT_2));
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::DISPLACEMENT_2));
 		}
 		else if(strcmp(key, "wLastLogEntry") == 0){
 			success = true;
@@ -85,6 +85,30 @@ namespace {
 		}
 		else if (strcmp(key, "wHPvalvesDirection") == 0){
 			int8_t result = MechanicalSystem::GetHighPressureValveConfiguration();
+			if(result == 0){
+				success = true;
+				return "0";
+			}
+			else if (result == 1){
+				success = true;
+				return "1";
+			}
+			else return "ERROR";
+		}
+		else if (strcmp(key, "wHpBlower") == 0){
+			int8_t result = HAL::getDigitalOutputState(HAL::DigitalOutput::STRUCTURAL_BLOWER_POWER);
+			if(result == 0){
+				success = true;
+				return "0";
+			}
+			else if (result == 1){
+				success = true;
+				return "1";
+			}
+			else return "ERROR";
+		}
+		else if (strcmp(key, "wLpBlower") == 0){
+			int8_t result = HAL::getDigitalOutputState(HAL::DigitalOutput::LEAKAGE_BLOWER_POWER);
 			if(result == 0){
 				success = true;
 				return "0";
@@ -155,6 +179,26 @@ namespace {
 			else if(val[0] == '0'){
 				success = true;
 				HAL::setDigitalOutput(HAL::DigitalOutput::WATER_PUMP_POWER, false);
+			}
+		}
+		else if(strcmp(key, "wHpBlower") == 0) {
+			if(val[0] == '1') {
+				success = true;
+				HAL::setDigitalOutput(HAL::DigitalOutput::STRUCTURAL_BLOWER_POWER, true);
+			}
+			else if(val[0] == '0'){
+				success = true;
+				HAL::setDigitalOutput(HAL::DigitalOutput::STRUCTURAL_BLOWER_POWER, false);
+			}
+		}
+		else if(strcmp(key, "wLpBlower") == 0) {
+			if(val[0] == '1') {
+				success = true;
+				HAL::setDigitalOutput(HAL::DigitalOutput::LEAKAGE_BLOWER_POWER, true);
+			}
+			else if(val[0] == '0'){
+				success = true;
+				HAL::setDigitalOutput(HAL::DigitalOutput::LEAKAGE_BLOWER_POWER, false);
 			}
 		}
 		else if(strcmp(key, "wExample_valueSender") == 0) {
@@ -344,6 +388,8 @@ namespace th_WebServer{
 		Jarvis.On("/wDisplacement2", routes::WidgetHandler_LiveShortValue("wDisplacement2"));
 		Jarvis.On("/wLastLogEntry", routes::WidgetHandler_LiveShortValue("wLastLogEntry"));
 
+		Jarvis.On("/wHpBlower", routes::WidgetHandler_Toggle("wHpBlower"));
+		Jarvis.On("/wLpBlower", routes::WidgetHandler_Toggle("wLpBlower"));
 		Jarvis.On("/wWaterPump", routes::WidgetHandler_Toggle("wWaterPump"));
 		Jarvis.On("/wHPvalvesDirection", routes::WidgetHandler_Toggle_Delayed("wHPvalvesDirection", th_test::thread, th_test::thread));
 		Jarvis.On("/wLPvalvesDirection", routes::WidgetHandler_Toggle_Delayed("wLPvalvesDirection", MechanicalSystem::tk_SetLowPressure_Positive::Task, MechanicalSystem::tk_SetLowPressure_Negative::Task));

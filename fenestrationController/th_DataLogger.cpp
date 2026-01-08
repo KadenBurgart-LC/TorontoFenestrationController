@@ -80,14 +80,14 @@ namespace {
 		char ambH[7]; // Ambient humidity (%) (one decimal place) (4 chars +1 for "\0")
 		_uint64ToString(entry.fullTimestamp, ts);
 		dtostrf(MechanicalSystem::GetTargetPressure(), 0, 1, tp);
-		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_LOW), 0, 1, lowPres);
-		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::DISPLACEMENT_1), 0, 2, dis1);
-		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::DISPLACEMENT_2), 0, 2, dis2);
-		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_LFE_DIFFERENTIAL), 0, 2, lfeD);
-		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_LFE_ABSOLUTE), 0, 2, lfeA);
-		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::TEMP_LFE), 0, 1, lfeT);
-		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::TEMP_AMB), 0, 1, ambT);
-		dtostrf(HAL::getAnalogInputFloat(HAL::AnalogInput::HUMIDITY_AMB), 0, 1, ambH);
+		dtostrf(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_LOW), 0, 1, lowPres);
+		dtostrf(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::DISPLACEMENT_1), 0, 2, dis1);
+		dtostrf(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::DISPLACEMENT_2), 0, 2, dis2);
+		dtostrf(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_LFE_DIFFERENTIAL), 0, 2, lfeD);
+		dtostrf(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_LFE_ABSOLUTE), 0, 2, lfeA);
+		dtostrf(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::TEMP_LFE), 0, 1, lfeT);
+		dtostrf(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::TEMP_AMB), 0, 1, ambT);
+		dtostrf(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::HUMIDITY_AMB), 0, 1, ambH);
 
 		//Serial.println("just before snprintf");
 
@@ -99,8 +99,8 @@ namespace {
 				HAL::RTC_GetDateTime(), // (19 chars)
 				tp,  // targetPressure (Pa)  PG100 goes to 9600 Pa. PG200 goes to 14390 Pa (5 chars)
 				lowPres, // lowPressureSensor (Pa) (one decimal place) (4 chars)
-				(int)round(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_MED)),  // medPressureSensor (Pa) (no decimal places) (5 chars)
-				(int)round(HAL::getAnalogInputFloat(HAL::AnalogInput::PRESSURE_WINDOW_HIGH)), // highPressureSensor (Pa) (5 chars)
+				(int)round(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_MED)),  // medPressureSensor (Pa) (no decimal places) (5 chars)
+				(int)round(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_HIGH)), // highPressureSensor (Pa) (5 chars)
 				dis1, // displacement1 (mm) (5 chars)
 				dis2, // displacement2 (mm) (5 chars)
 				lfeD, // LFE differential pressure (Pa) (two decimal places) (7 chars)

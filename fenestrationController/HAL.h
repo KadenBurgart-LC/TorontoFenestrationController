@@ -43,32 +43,50 @@ namespace HAL {
 		VALVE_C7_2  // leakage system negative blower vent valve feedback signal
 	};
 
-	/* We typically measure analog signals either by voltage or by current.
-	   Some sensor systems give us conversion factors to convert from ADC counts
-	   into volts or amps. Other sensor systems just give us a raw digital value
-	   that converts directly into the measurement units of the sensor.
-	   This enum tells us when an analog sensor signal can be converted to an
-	   intermediate voltage or current, though, which helps a lot with testing
-	   and calibration in some circumstances. */
-	enum class AnalogIntermediateMeasurementType {
-		VOLTAGE, 	// Analog signals that convert to voltage and THEN to the sensor units
-		CURRENT,  	// Analog signals that convert to current and THEN to the sensor units
-		NA 			// Analog signals that convert directly to the measurement units of a sensor
+	enum class AnalogOutput {
+		VALVE_C7_8, // leakage system cavity vent (main control valve) feedback signal
+		VALVE_C7_1, // leakage system positive blower vent valve feedback signal
+		VALVE_C7_2  // leakage system negative blower vent valve feedback signal
 	};
 
-	struct AnalogSignalDefinition {
-		AnalogIntermediateMeasurementType MeasurementType = AnalogIntermediateMeasurementType::NA;
-		float IntermediateMeasurementType_ConversionDenominator = 1;
+	enum class AnalogInputType {
+		P1_08ADL_1,	// 8-CH analog current input module (4-20 mA)
+		P1_08ADL_2, // 8-CH analog voltage input module (0-10 V)
+		Simulation  // Don't read a real value, just regurgitate whatever is in LastRawUnitValue and LastRawSignalValue
+	};
 
-		const char* SignalUnits = "";
-		float SignalUnitGain = 1;
-		float SignalUnitOffset = 0;
+	struct AnalogInputDefinition {
+		AnalogInputType InputType;
+
+		const char* RawUnits = "";    // the raw input units (e.g. ADC counts or mA or V)
+		const char* SignalUnits = ""; // the actual physical units of the output (e.g. mm or Pa or %)
+		double SignalUnitGain = 1;    // the gain to convert from raw units to signal units (signal units = raw units * gain + offset)
+		double SignalUnitOffset = 0;  // the offset to convert from raw units to signal units (signal units = raw units * gain + offset)
 
 		int8_t P1_Slot = -1;
 		int8_t P1_Channel = -1;
 
-		float LastIntermediateValue = 0;
-		float LastSignalUnitValue = 0;
+		double LastRawUnitValue = 0;	// The last value read
+		double LastSignalUnitValue = 0; // The last value read
+	};
+
+	enum class AnalogOutputType {
+		P1_08DAL_1  // 8-CH analog current output module (4-20 mA)
+	};
+
+	struct AnalogOutputDefinition {
+		AnalogOutputType OutputType;
+
+		const char* RawUnits = "";    // the raw output units (e.g. DAC counts or mA or V)
+		const char* SignalUnits = ""; // the actual physical units of the output (e.g. mm or Pa or %)
+		double SignalUnitGain = 1;	  // the gain to convert from raw units to signal units (signal units = raw units * gain + offset)
+		double SignalUnitOffset = 0;  // the offset to convert from raw units to signal units (signal units = raw units * gain + offset)
+
+		int8_t P1_Slot = -1;
+		int8_t P1_Channel = -1;
+
+		double LastRawUnitValue = 0;	// The last value read
+		double LastSignalUnitValue = 0; // The last value read
 	};
 
 	/* Set the state of a digital output device
@@ -78,10 +96,14 @@ namespace HAL {
 	     2 - Selected output not implemented - no action taken
 	 */
 	uint8_t setDigitalOutput(DigitalOutput o, bool state);
-
 	bool getDigitalOutputState(DigitalOutput o);
 
-	float getAnalogInputFloat(AnalogInput i);
+	double getAnalogInput_RawUnits(AnalogInputDefinition input, bool *error = nullptr);
+	double getAnalogInput_RawUnits(AnalogInput i, bool *error = nullptr);
+	double getAnalogInput_SignalUnits(AnalogInput i, bool *error = nullptr);
+
+	bool setAnalogOutput_RawUnits(AnalogOutput o, double value); // returns false if there's an error
+	bool setAnalogOutput_SignalUnits(AnalogOutput o, double value); // returns false if there's an error
 
 	void init_CPU();
 	void init_Serial();

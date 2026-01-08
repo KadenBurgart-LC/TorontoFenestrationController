@@ -33,17 +33,17 @@ namespace {
 
 	// Keep an internal memory map of what the pin number is for each Arduino style output
 	std::map<HAL::DigitalOutput, uint8_t> Arduino_pins = {
-		{HAL::DigitalOutput::YELLOW_LED, LED_BUILTIN}
+		{HAL::DigitalOutput::YELLOW_LED, LED_BUILTIN},
 	};
 
 	// Keep an internal memory map of how to read each analog input
-	std::map<HAL::AnalogInput, HAL::AnalogSignalDefinition> AnalogSignals = {
+	std::map<HAL::AnalogInput, HAL::AnalogInputDefinition> AnalogInputs = {
 		{HAL::AnalogInput::PRESSURE_WINDOW_LOW, ([]() {
-			HAL::AnalogSignalDefinition def;
+			HAL::AnalogInputDefinition def;
 
-			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
-			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+			def.InputType = HAL::AnalogInputType::P1_08ADL_1;
 
+			def.RawUnits = "mA";
 			def.SignalUnits = "Pa";
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
@@ -54,11 +54,11 @@ namespace {
 			return def;
 		})()},
 		{HAL::AnalogInput::PRESSURE_WINDOW_MED, ([]() {
-			HAL::AnalogSignalDefinition def;
+			HAL::AnalogInputDefinition def;
 
-			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
-			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+			def.InputType = HAL::AnalogInputType::P1_08ADL_1;
 
+			def.RawUnits = "mA";
 			def.SignalUnits = "Pa";
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
@@ -69,11 +69,11 @@ namespace {
 			return def;
 		})()},
 		{HAL::AnalogInput::PRESSURE_WINDOW_HIGH, ([]() {
-			HAL::AnalogSignalDefinition def;
+			HAL::AnalogInputDefinition def;
 
-			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
-			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+			def.InputType = HAL::AnalogInputType::P1_08ADL_1;
 
+			def.RawUnits = "mA";
 			def.SignalUnits = "Pa";
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
@@ -84,11 +84,11 @@ namespace {
 			return def;
 		})()},
 		{HAL::AnalogInput::PRESSURE_LFE_DIFFERENTIAL, ([]() {
-			HAL::AnalogSignalDefinition def;
+			HAL::AnalogInputDefinition def;
 
-			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
-			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+			def.InputType = HAL::AnalogInputType::P1_08ADL_1;
 
+			def.RawUnits = "mA";
 			def.SignalUnits = "Pa";
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
@@ -98,12 +98,27 @@ namespace {
 
 			return def;
 		})()},
-		{HAL::AnalogInput::PRESSURE_LFE_DIFFERENTIAL, ([]() {
-			HAL::AnalogSignalDefinition def;
+		{HAL::AnalogInput::PRESSURE_LFE_ABSOLUTE, ([]() {
+			HAL::AnalogInputDefinition def;
 
-			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
-			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+			def.InputType = HAL::AnalogInputType::P1_08ADL_1;
 
+			def.RawUnits = "mA";
+			def.SignalUnits = "Pa";
+			def.SignalUnitGain = 1;
+			def.SignalUnitOffset = 0;
+
+			def.P1_Slot = 2;
+			def.P1_Channel = 1;
+
+			return def;
+		})()},
+		{HAL::AnalogInput::TEMP_AMB, ([]() {
+			HAL::AnalogInputDefinition def;
+
+			def.InputType = HAL::AnalogInputType::P1_08ADL_1;
+
+			def.RawUnits = "mA";
 			def.SignalUnits = "Pa";
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
@@ -114,11 +129,11 @@ namespace {
 			return def;
 		})()},
 		{HAL::AnalogInput::DISPLACEMENT_1, ([]() {
-			HAL::AnalogSignalDefinition def;
+			HAL::AnalogInputDefinition def;
 
-			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
-			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+			def.InputType = HAL::AnalogInputType::P1_08ADL_1;
 
+			def.RawUnits = "mA";
 			def.SignalUnits = "Pa";
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
@@ -129,11 +144,60 @@ namespace {
 			return def;
 		})()},
 		{HAL::AnalogInput::DISPLACEMENT_2, ([]() {
-			HAL::AnalogSignalDefinition def;
+			HAL::AnalogInputDefinition def;
 
-			def.MeasurementType = HAL::AnalogIntermediateMeasurementType::CURRENT;
-			def.IntermediateMeasurementType_ConversionDenominator = 409.55;	// This is the denominator for a P1 analog current channel
+			def.InputType = HAL::AnalogInputType::P1_08ADL_1;
 
+			def.RawUnits = "mA";
+			def.SignalUnits = "Pa";
+			def.SignalUnitGain = 1;
+			def.SignalUnitOffset = 0;
+
+			def.P1_Slot = 2;
+			def.P1_Channel = 1;
+
+			return def;
+		})()}
+	};
+
+	// Keep an internal memory map of how to write each analog output
+	std::map<HAL::AnalogOutput, HAL::AnalogOutputDefinition> AnalogOutputs = {
+		{HAL::AnalogOutput::VALVE_C7_8, ([]() {  // leakage system cavity vent (main control valve) feedback signal
+			HAL::AnalogOutputDefinition def;
+
+			def.OutputType = HAL::AnalogOutputType::P1_08DAL_1;
+
+			def.RawUnits = "mA";
+			def.SignalUnits = "Pa";
+			def.SignalUnitGain = 1;
+			def.SignalUnitOffset = 0;
+
+			def.P1_Slot = 2;
+			def.P1_Channel = 1;
+
+			return def;
+		})()},
+		{HAL::AnalogOutput::VALVE_C7_1, ([]() {  // leakage system cavity vent (main control valve) feedback signal
+			HAL::AnalogOutputDefinition def;
+
+			def.OutputType = HAL::AnalogOutputType::P1_08DAL_1;
+
+			def.RawUnits = "mA";
+			def.SignalUnits = "Pa";
+			def.SignalUnitGain = 1;
+			def.SignalUnitOffset = 0;
+
+			def.P1_Slot = 2;
+			def.P1_Channel = 1;
+
+			return def;
+		})()},
+		{HAL::AnalogOutput::VALVE_C7_2, ([]() {  // leakage system cavity vent (main control valve) feedback signal
+			HAL::AnalogOutputDefinition def;
+
+			def.OutputType = HAL::AnalogOutputType::P1_08DAL_1;
+
+			def.RawUnits = "mA";
 			def.SignalUnits = "Pa";
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
@@ -148,22 +212,47 @@ namespace {
 	// The RGB LED setup line from the P1AM-200 documentation
 	Adafruit_NeoPixel C0_1_RgbLed(1, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
-	// uint8_t setDigitalOutputUtil(HAL::DigitalOutput o, bool state){
-	// 	DO_States[o] = state;
-	// 	return (uint8_t)state;
-	// }
+	// Analog write to a P1-08ADL-1 8-CH, 4-20 mA current signal output module
+	bool P1_08DAL_1_write_mA(uint8_t slot, uint8_t channel, double mA){
+		if(mA < 4) return false;
+		if(mA > 20) return false;
+		if(slot < 1) return false;
+		if(channel < 0) return false;
 
-	// uint8_t setP1DigitalOutput(HAL::DigitalOutput o, bool state){
-	// 	P1.writeDiscrete(state, P1_DO_Channels[o][0], P1_DO_Channels[o][1]);
+		int outputCounts = ( (mA - 4.0) / 20.0 ) * 4095.0; // The P1.writeAnalog function takes a 12-bit (0-4095) "count" number
 
-	// 	return setDigitalOutputUtil(o, state);
-	// }
+		P1.writeAnalog(outputCounts, slot, channel);
 
-	// uint8_t setArdPinDigitalOutput(HAL::DigitalOutput o, bool state){
-	// 	digitalWrite(Arduino_pins[o], state);
+		return true;
+	}
 
-	// 	return setDigitalOutputUtil(o, state);
-	// }
+	// Analog read from a P1-08ADL-1 8-CH, 4-20 mA current signal input module
+	double P1_08ADL_1_read_mA(uint8_t slot, uint8_t channel, bool* error){
+		if(error != nullptr) *error = true;
+		if(slot < 1) return 0;
+		if(channel < 1) return 0;
+		if(channel > 8) return 0;
+
+		int inputCounts = P1.readAnalog(slot, channel);
+
+		if(error != nullptr) *error = true;
+
+		return 20.0 * (double)inputCounts / 8191.0; // mA onversion according to https://facts-engineering.github.io/modules/P1-08ADL-1/P1-08ADL-1.html
+	}
+
+	// Analog read from a P1-08ADL-2 8-CH, 0-10 V voltage signal input module
+	double P1_08ADL_2_read_V(uint8_t slot, uint8_t channel, bool* error){
+		if(error != nullptr) *error = true;
+		if(slot < 1) return 0;
+		if(channel < 1) return 0;
+		if(channel > 8) return 0;
+
+		int inputCounts = P1.readAnalog(slot, channel);
+
+		if(error != nullptr) *error = true;
+
+		return 10.0 * (double)inputCounts / 8191.0; // mA onversion according to https://facts-engineering.github.io/modules/P1-08ADL-1/P1-08ADL-1.html
+	}
 }
 
 // Public members
@@ -203,22 +292,84 @@ namespace HAL {
 		return DO_States[o];
 	}
 
-	float getAnalogInputFloat(AnalogInput i){
-		auto ix = AnalogSignals.find(i);
+	double getAnalogInput_RawUnits(AnalogInputDefinition input, bool *error){
+		if (input.InputType == AnalogInputType::P1_08ADL_1){
+			input.LastRawUnitValue = P1_08ADL_1_read_mA(input.P1_Slot, input.P1_Channel, error);
+			input.LastSignalUnitValue = input.LastRawUnitValue * input.SignalUnitGain + input.SignalUnitOffset;
 
-		if (ix != AnalogSignals.end()){
-			AnalogSignalDefinition& sig = ix->second;
+			return input.LastRawUnitValue;
+		}
+		else if(input.InputType == AnalogInputType::P1_08ADL_2){
+			input.LastRawUnitValue = P1_08ADL_1_read_mA(input.P1_Slot, input.P1_Channel, error);
+			input.LastSignalUnitValue = input.LastRawUnitValue * input.SignalUnitGain + input.SignalUnitOffset;
 
-			if (sig.P1_Slot > 0 && sig.P1_Channel > 0){
-				sig.LastIntermediateValue =  ((float)P1.readAnalog(sig.P1_Slot, sig.P1_Channel)) / sig.IntermediateMeasurementType_ConversionDenominator;
-				sig.LastSignalUnitValue = sig.LastIntermediateValue * sig.SignalUnitGain + sig.SignalUnitOffset;
-
-				return sig.LastSignalUnitValue;
-			}
-			else return 0;
+			return input.LastRawUnitValue;
 		}
 		else return 0;
 	}
+
+	double getAnalogInput_RawUnits(AnalogInput i, bool *error){
+		if(error != nullptr) *error = true;
+		auto ix = AnalogInputs.find(i);
+
+		if (ix != AnalogInputs.end()){
+			AnalogInputDefinition& input = ix->second;
+
+			return getAnalogInput_RawUnits(input, error);
+		}
+		else return 0;
+	}
+
+	double getAnalogInput_SignalUnits(AnalogInput i, bool *error){
+		if(error != nullptr) *error = true;
+		auto ix = AnalogInputs.find(i);
+
+		if (ix != AnalogInputs.end()){
+			AnalogInputDefinition& input = ix->second;
+
+			return getAnalogInput_RawUnits(input, error);
+
+			return input.LastSignalUnitValue;
+		}
+		else return 0;
+	}
+
+	bool setAnalogOutput_RawUnits(AnalogOutputDefinition output, double value){
+		bool error = true;
+
+		if(output.OutputType == HAL::AnalogOutputType::P1_08DAL_1) error = P1_08DAL_1_write_mA(output.P1_Slot, output.P1_Channel, value);
+
+		return error;
+	}
+
+	bool setAnalogOutput_RawUnits(AnalogOutput o, double value){
+		bool error = true;
+		auto ix = AnalogOutputs.find(o);
+
+		if(ix != AnalogOutputs.end()){
+			AnalogOutputDefinition& output = ix->second;
+
+			error = setAnalogOutput_RawUnits(output, value);
+		}
+
+		return error;
+	}
+
+	bool setAnalogOutput_SignalUnits(AnalogOutput o, double value){
+		bool error = true;
+		auto ix = AnalogOutputs.find(o);
+
+		if(ix != AnalogOutputs.end()){
+			AnalogOutputDefinition& output = ix->second;
+
+			double rawValue = (value - output.SignalUnitOffset) / output.SignalUnitGain;
+
+			error = setAnalogOutput_RawUnits(output, value);
+		}
+
+		return error;
+	}
+	
 
 	void init_CPU(){
 		while (!P1.init());
