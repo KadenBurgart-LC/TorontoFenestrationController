@@ -135,7 +135,7 @@ namespace {
 
 			def.RawUnits = "mA";
 			def.SignalUnits = "Pa";
-			def.SignalUnitGain = 1;
+			def.SignalUnitGain = 0.8;
 			def.SignalUnitOffset = 0;
 
 			def.P1_Slot = 2;
@@ -150,7 +150,7 @@ namespace {
 
 			def.RawUnits = "mA";
 			def.SignalUnits = "Pa";
-			def.SignalUnitGain = 1;
+			def.SignalUnitGain = 0.7;
 			def.SignalUnitOffset = 0;
 
 			def.P1_Slot = 2;
@@ -292,7 +292,7 @@ namespace HAL {
 		return DO_States[o];
 	}
 
-	double getAnalogInput_RawUnits(AnalogInputDefinition input, bool *error){
+	double getAnalogInput_RawUnits(AnalogInputDefinition& input, bool *error){
 		if (input.InputType == AnalogInputType::P1_08ADL_1){
 			input.LastRawUnitValue = P1_08ADL_1_read_mA(input.P1_Slot, input.P1_Channel, error);
 			input.LastSignalUnitValue = input.LastRawUnitValue * input.SignalUnitGain + input.SignalUnitOffset;
@@ -327,7 +327,7 @@ namespace HAL {
 		if (ix != AnalogInputs.end()){
 			AnalogInputDefinition& input = ix->second;
 
-			return getAnalogInput_RawUnits(input, error);
+			getAnalogInput_RawUnits(input, error);
 
 			return input.LastSignalUnitValue;
 		}
@@ -554,6 +554,19 @@ namespace HAL {
 			year(t), month(t), day(t), hour(t), minute(t), second(t));
 
 		return dateTimeStr;
+	}
+
+	/* A function to recall the number of seconds that have passed today */
+	uint16_t RTC_GetSecondsToday(){
+		time_t t = PCF8563_RTC.getEpoch();
+
+		uint16_t secs = 0;
+
+		secs += hour(t) * 3600;
+		secs += minute(t) * 60;
+		secs += second(t);
+
+		return secs;
 	}
 
 	/* A function to recall the current date/time in terms of seconds since Jan 1 1970 (unix timestamp) */

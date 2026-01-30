@@ -17,13 +17,34 @@ $('#wExample_labelValue').find('input').val("Label value example data field");
 /* Fields that need to get live updates register themselves in this object.
  * 
  * STRUCTURE:
- * {
- *   'variableKey1' : callbackFunction1,
- *   'variableKey2' : callbackFunction2
+ * liveDataSubscribers = {
+ *   'subscriberKey1': {
+ *       'values': [
+ *            'variableKey1',
+ *            'variableKey2',
+ *            .
+ *            .
+ *            .
+ *       ],
+ *       'callbackFunc': callbackFunction1
+ *   },
+ *   'subscriberKey2': {
+ *       'values': [
+ *            'variableKey1',
+ *            'variableKey2',
+ *            .
+ *            .
+ *            .
+ *       ],
+ *       'callbackFunc': callbackFunction1
+ *   },
+ *   .
+ *   .
+ *   .
  * }
  *
  * To subscribe:
- * subscribeToLiveDataRequester('myKey', myCallbackFunction);
+ * subscribeToLiveDataRequester('subscriberKey', ['variableKey1, variableKey2, ...'], myCallbackFunction);
  *
  * The callback function for subscribers needs to be able to receive and process the response data object.
  *
@@ -34,67 +55,51 @@ $('#wExample_labelValue').find('input').val("Label value example data field");
  * }
  *
  * To unsubscribe:
- * unsubscribeFromLiveDataRequester('myKey');
+ * unsubscribeFromLiveDataRequester('subscriberKey');
  *
- * TODO: Change the behavior so that multiple subscribers can register to look at the same key, but the server
- *       only gets asked for each key's value once, and the subscribers only get the value of the one key they
- *       subscribed to instead of getting the whole response object.
  */
 const liveDataSubscribers = {};
 
-function subscribeToLiveDataRequester(keyStr, callbackFunc){
-  if(liveDataSubscribers[keyStr] == undefined){
-    liveDataSubscribers[keyStr] = [callbackFunc];
+function subscribeToLiveDataRequester(subscriberKey, vals, func){
+  if(liveDataSubscribers[subscriberKey] == undefined){
+    liveDataSubscribers[subscriberKey] = {
+      'values': vals,
+      'callbackFunc': func
+    };
   }
   else {
-    if(liveDataSubscribers[keyStr].includes(callbackFunc)){
-      console.warn('LiveDataRequester: ${keyStr} attempted to subscribe to the LiveDataRequester, but they are already subscribed.');
-    }
-    else {
-      liveDataSubscribers[keyStr].push(callbackFunc);
-    }
+    console.warn('LiveDataRequester: ${subscriberKey} attempted to subscribe, but they are already subscribed.');
   }
 }
 
-function unsubscribeFromLiveDataRequester(keyStr, callbackFunc){
-  if(liveDataSubscribers[keyStr] !== undefined){
-    if(callbackFunc === undefined){
-      console.warn('LiveDataRequester: ${keyStr} attempted to unsubscribe from the LiveDataRequester, but no callback function was provided.');
-    }
-    else {
-      const index = liveDataSubscribers[keyStr].indexOf(callbackFunc);
-      if(index !== -1){
-        liveDataSubscribers[keyStr].splice(index, 1);
-        if(liveDataSubscribers[keyStr].length === 0){
-          delete liveDataSubscribers[keyStr];
-        }
-      }
-      else {
-        console.warn('LiveDataRequester: ${keyStr} attempted to unsubscribe from the LiveDataRequester, but they are not in the subscriber list.');
-      }
-    }
-  }
-  else {
-    console.warn('LiveDataRequester: ${keyStr} attempted to unsubscribe from the LiveDataRequester, but they are not in the subscriber list.');
+function unsubscribeFromLiveDataRequester(subscriberKey) {
+  if (liveDataSubscribers[subscriberKey]) {
+    delete liveDataSubscribers[subscriberKey];
+  } else {
+    console.warn(`LiveDataRequester: Attempted to unsubscribe ${subscriberKey}, but no such subscriber exists.`);
   }
 }
 
 var liveDataRequester_TimerEventHandler = function(){
-  const keysToRequest = Object.keys(liveDataSubscribers);
+  // The Set() type prevents duplicate entries
+  const allRequestedVars = new Set();
+  for (const subKey in liveDataSubscribers) {
+    liveDataSubscribers[subKey].values.forEach(v => allRequestedVars.add(v));
+  }
 
-  if (keysToRequest.length == 0) return;
+  if (allRequestedVars.size === 0) return;
+  //allRequestedVars.add('secsToday');
+
+  const variableKeysArray = Array.from(allRequestedVars);
 
   $.post(rootUrl + '/liveDataPacketRequest',
-      JSON.stringify(keysToRequest),
+      JSON.stringify(variableKeysArray),
       function(data){
-        for (const key in liveDataSubscribers) {
-          const callbacks = liveDataSubscribers[key];
-          const value = data[key];
+        for (const subscriberKey in liveDataSubscribers) {
+          const callback = liveDataSubscribers[subscriberKey].callbackFunc;
 
-          if(callbacks){
-            for(let i = 0; i < callbacks.length; i++){
-              if(callbacks[i]) callbacks[i](value);
-            }
+          if(callback){
+            callback(data);
           }
         }
       },
@@ -103,7 +108,7 @@ var liveDataRequester_TimerEventHandler = function(){
     .fail(function(jqXHR, textStatus, errorThrown){
       console.error("LiveDataRequester: Live data packet request failed.");
     });
-}
+};
 
 var liveDataRequester_TimerEvent = setInterval(liveDataRequester_TimerEventHandler, 1000);
 

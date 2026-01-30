@@ -39,6 +39,9 @@ namespace {
 			success = true;
 			return String(millis());
 		}
+		else if (strcmp(key, "secsToday") == 0){
+			return String(HAL::RTC_GetSecondsToday());
+		}
 		else if (strcmp(key, "wExample_liveShortValue") == 0){
 			success = true;
 			return (String("LSV: ") + String(millis()/100%100));

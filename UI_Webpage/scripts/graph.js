@@ -130,7 +130,7 @@ $(window).resize(() => LiveGraph.render() );
 
 /*  *****     *****     *****     ***** LIVE GRAPH HOOKUP / REGISTRATION *****     *****     *****     *****  */
 
-var graphUpdater = function(){
+var oldGraphUpdater = function(){
   var refreshImage = $('#w6').find('.refresh>img');
   refreshImage.unbind('mouseenter mouseleave');
   refreshImage.attr('src', './assets/spinner.gif');
@@ -154,5 +154,52 @@ var graphUpdater = function(){
         refreshImage.hover(refreshHoverOn, refreshHoverOff);
       });
 };
+
+var updateGraph = function(data){
+  const allRequestedVars = new Set();
+  for (const subKey in liveDataSubscribers) {
+    liveDataSubscribers[subKey].values.forEach(v => allRequestedVars.add(v));
+  }
+
+  //console.log(data);
+
+  var t = 0;
+
+  if('secsToday' in data) t = data.secsToday;
+  else {
+    console.error("updateGraph: Error: there was no data for 'secsToday'.");
+    return;
+  }
+
+  var pressure = 0;
+  var disp1 = 0;
+  var disp2 = 0;
+
+  if('wLowPressure' in data) pressure = data.wLowPressure;
+  if('wMedPressure' in data) pressure = data.wMedPressure;
+  if('wHighPressure' in data) pressure = data.wHighPressure;
+
+  if('wDisplacement1' in data) disp1 = data.wDisplacement1;
+  if('wDisplacement2' in data) disp2 = data.wDisplacement2;
+
+  LiveGraph.pressureData.push([+t, +pressure]);
+  LiveGraph.d1Data.push([+t, +disp1]);
+  LiveGraph.d2Data.push([+t, +disp2]);
+
+  if( 
+    ( LiveGraph.pressureData.length >= 50 ) ||
+    ( LiveGraph.d1Data.length >= 50 ) ||
+    ( LiveGraph.d2Data.length >= 50 )
+    )
+  {
+    LiveGraph.pressureData.shift();
+    LiveGraph.d1Data.shift();
+    LiveGraph.d2Data.shift();
+  }
+
+  LiveGraph.render();
+}
+
+subscribeToLiveDataRequester('graph', ['secsToday'], updateGraph);
 
 /*  *****     *****     *****     ***** /LIVE GRAPH HOOKUP / REGISTRATION *****     *****     *****     *****  */

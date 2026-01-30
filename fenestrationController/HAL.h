@@ -98,7 +98,7 @@ namespace HAL {
 	uint8_t setDigitalOutput(DigitalOutput o, bool state);
 	bool getDigitalOutputState(DigitalOutput o);
 
-	double getAnalogInput_RawUnits(AnalogInputDefinition input, bool *error = nullptr);
+	double getAnalogInput_RawUnits(AnalogInputDefinition& input, bool *error = nullptr);
 	double getAnalogInput_RawUnits(AnalogInput i, bool *error = nullptr);
 	double getAnalogInput_SignalUnits(AnalogInput i, bool *error = nullptr);
 
@@ -158,6 +158,9 @@ namespace HAL {
 
 	/* A function to recall the current date and time from the Real-Time Clock */
 	const char* RTC_GetDateTime();
+
+	/* A function to recall the number of seconds that have passed today */
+	uint16_t RTC_GetSecondsToday();
 
 	/* A function to recall the current date/time in terms of seconds since Jan 1 1970 (unix timestamp) */
 	time_t RTC_GetEpoch();

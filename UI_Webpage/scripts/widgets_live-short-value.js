@@ -62,7 +62,7 @@ var liveShortValueGoPauseClickHandler = function(goImg){
         goImg.on('mouseenter', function(){ goImg.attr('src', './assets/Pause2.png'); });
         goImg.on('mouseleave', function(){ goImg.attr('src', './assets/Pause.png'); });
 
-        subscribeToLiveDataRequester(id, function(data){
+        subscribeToLiveDataRequester(id, [id], function(data){
             if(data[id] !== undefined) textField.val(data[id]);
         });
     }
