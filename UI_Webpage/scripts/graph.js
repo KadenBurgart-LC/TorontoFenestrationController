@@ -12,6 +12,11 @@ var LiveGraph = {
     d1Path = svgG.append('path'); // Adds a path to the svg to display the d1 data
     d2Path = svgG.append('path'); // Adds a path to the svg to display the d2 data
 
+    // Add axis labels
+    xAxisLabel = svgG.append('text').attr('class', 'axis-label').style('font-size', '12px');
+    pAxisLabel = svgG.append('text').attr('class', 'axis-label').style('font-size', '12px');
+    dAxisLabel = svgG.append('text').attr('class', 'axis-label').style('font-size', '12px');
+
     // Initialize empty data arrays
     this.pressureData = [];
     this.d1Data = [];
@@ -55,9 +60,19 @@ LiveGraph.render = function(){
       .attr("transform", "translate(0," + height + ")")
       .call(d3.axisBottom(xScale));
 
+    // X axis label
+    xAxisLabel
+      .attr("text-anchor", "middle")
+      .attr("x", width / 2)
+      .attr("y", height + margin.bottom)
+      .text("Time (minutes)");
+
     // Render the pressure axis
     var pMax = d3.max(this.pressureData, d => d[1]);
     var pMin = d3.min(this.pressureData, d => d[1]);
+    // Ensure domain includes zero
+    pMax = Math.max(pMax, 0);
+    pMin = Math.min(pMin, 0);
     var pRange = pMax - pMin;
     var pScale = d3.scaleLinear()
       .domain([pMin - (pRange * marginRatio), pMax + (pRange * marginRatio)])
@@ -66,7 +81,15 @@ LiveGraph.render = function(){
       .transition()
         .duration(transitionDelay)
         .ease(d3.easeCubicOut)
-      .call(d3.axisLeft(pScale));
+      .call(d3.axisLeft(pScale).tickFormat(d3.format('.0f')));
+
+    // Pressure axis label
+    pAxisLabel
+      .attr("text-anchor", "middle")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -height / 2)
+      .attr("y", -margin.left + 15)
+      .text("Pressure (Pa)");
 
     // Render the deflection axis
     var d1Max = d3.max(this.d1Data, d => d[1]);
@@ -84,7 +107,15 @@ LiveGraph.render = function(){
         .duration(transitionDelay)
         .ease(d3.easeCubicOut)
       .attr("transform", "translate("+width+",0)")
-      .call(d3.axisRight(dScale));
+      .call(d3.axisRight(dScale).tickFormat(d3.format('.1f')));
+
+    // Deflection axis label
+    dAxisLabel
+      .attr("text-anchor", "middle")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -height / 2)
+      .attr("y", width + margin.right)
+      .text("Displacement (mm)");
 
     // Render the data paths
     const  line = d3.line().x(d => xScale(d[0])).y(d => pScale(d[1]));
@@ -134,42 +165,16 @@ $(window).resize(() => LiveGraph.render() );
 
 /*  *****     *****     *****     ***** LIVE GRAPH HOOKUP / REGISTRATION *****     *****     *****     *****  */
 
-var oldGraphUpdater = function(){
-  var refreshImage = $('#w6').find('.refresh>img');
-  refreshImage.unbind('mouseenter mouseleave');
-  refreshImage.attr('src', './assets/spinner.gif');
-
-  $.get(rootUrl + '/get/pressure',
-      function(data){
-        $('#w6').find('input').val(data.pressure);
-        
-        LiveGraph.pressureData.push([+data.millis, +data.pressure]);
-        LiveGraph.d1Data.push([+data.millis, (+data.pressure)/5-5]);
-        LiveGraph.d2Data.push([+data.millis, (+data.pressure)/6]);
-
-        if(LiveGraph.pressureData.length >= 50) LiveGraph.pressureData.shift();
-        if(LiveGraph.d1Data.length >= 50) LiveGraph.d1Data.shift();
-        if(LiveGraph.d2Data.length >= 50) LiveGraph.d2Data.shift();
-
-        LiveGraph.render();
-
-      }).done(function(){
-        refreshImage.attr('src', './assets/Refresh2.png'); 
-        refreshImage.hover(refreshHoverOn, refreshHoverOff);
-      });
-};
-
 var updateGraph = function(data){
+  const maxNumberOfPointsToShow = 180;
   const allRequestedVars = new Set();
   for (const subKey in liveDataSubscribers) {
     liveDataSubscribers[subKey].values.forEach(v => allRequestedVars.add(v));
   }
 
-  //console.log(data);
-
   var t = 0;
 
-  if('secsToday' in data) t = data.secsToday;
+  if('secsToday' in data) t = data.secsToday / 60;
   else {
     console.error("updateGraph: Error: there was no data for 'secsToday'.");
     return;
@@ -191,9 +196,9 @@ var updateGraph = function(data){
   LiveGraph.d2Data.push([+t, +disp2]);
 
   if( 
-    ( LiveGraph.pressureData.length >= 50 ) ||
-    ( LiveGraph.d1Data.length >= 50 ) ||
-    ( LiveGraph.d2Data.length >= 50 )
+    ( LiveGraph.pressureData.length >= maxNumberOfPointsToShow ) ||
+    ( LiveGraph.d1Data.length >= maxNumberOfPointsToShow ) ||
+    ( LiveGraph.d2Data.length >= maxNumberOfPointsToShow )
     )
   {
     LiveGraph.pressureData.shift();
@@ -204,7 +209,7 @@ var updateGraph = function(data){
   LiveGraph.render();
 }
 
-// NOTE: Subscription is not automatic. When antother value subscribes to live data, that automatically starts graphing.
+// NOTE: Event subscription is not automatic. When antother value subscribes to live data, that automatically starts graphing.
 //       The graph automatically unsubscribes when all other subscribers stop.
 //subscribeToLiveDataRequester('graph', ['secsToday'], updateGraph);
 
