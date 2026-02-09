@@ -64,26 +64,26 @@ namespace {
     Serial.println("...");
 
     if(
-      (2 < slot && slot < 4) &&
+      (5 < slot && slot < 7) &&
       (0 < channel && channel < 9)
       ){
       float inputVolts = 0;
 
       inputCounts = P1.readAnalog(slot, channel);
-      inputVolts = 10 * ((float)inputCounts / 8191); // Conversion formula from the P1-08ADL-2 documentation
+      inputVolts = 10 * ((float)inputCounts / 8191); // Conversion formula from the P1-08ADL-2 documentation https://facts-engineering.github.io/
 
       Serial.print("Channel voltage: ");
       Serial.print(inputVolts);
       Serial.println(" V");
     }
     else if(
-      (1 < slot && slot < 3) &&
+      (3 < slot && slot < 6) &&
       (0 < channel && channel < 9)
       ){
       float input_mA = 0;
 
       inputCounts = P1.readAnalog(slot, channel);
-      input_mA = 20 * ((float)inputCounts / 8191); // Conversion formula from the P1-08ADL-1 documentation
+      input_mA = 20 * ((float)inputCounts / 8191); // Conversion formula from the P1-08ADL-1 documentation https://facts-engineering.github.io/
 
       Serial.print("Channel current: ");
       Serial.print(input_mA);
@@ -94,13 +94,48 @@ namespace {
     }
   }
 
+  void c_AnalogOutput(){
+    // https://facts-engineering.github.io/modules/P1-08DAL-1/P1-08DAL-1.html
+
+    uint8_t slot    = strtol(console.Arguments[1], nullptr, 10);
+    uint8_t channel = strtol(console.Arguments[2], nullptr, 10);
+    float value = strtof(console.Arguments[3], nullptr);
+
+    int outputCounts = 0;
+
+    if(
+      (1 < slot && slot < 4) && 
+      (0 < channel && channel < 9)
+      ){
+      if(4 <= value && value <= 20){
+        outputCounts = (value - 4) * 4095 / 16; // Convert from mA to 12 bit (4095) counts 
+
+        Serial.print("Attempting to write");
+        Serial.print(value);
+        Serial.print(" mA to channel ");
+        Serial.print(channel);
+        Serial.print(" on slot ");
+        Serial.print(slot);
+        Serial.println("...");
+
+        P1.writeAnalog(outputCounts, slot, channel);
+      }
+      else {
+        Serial.println("Analog current output channels must only write values in the range of 4-20 mA.\nCancelling operation.");
+      }      
+    }
+    else {
+      Serial.println("Invalid slot or channel");
+    }
+  }
+
   void c_P1StatusCodes(){
     uint8_t slot    = strtol(console.Arguments[1], NULL, 10);
 
     char statusCodeBuffer[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
     char configCodeBuffer[2] = {0,0};
 
-    if(slot == 3){
+    if(slot == 6){
       Serial.print("Checking status codes on P1-08ADL-2 module on slot ");
       Serial.print(slot);
       Serial.println("...");
@@ -110,10 +145,10 @@ namespace {
 
       uint16_t configCode = (configCodeBuffer[0] << 8) | (configCodeBuffer[1]);
 
-      Serial.print("Slot 3: Config code: ");Serial.println(configCode);
-      Serial.print("Slot 3: Status code: Lost 24V: ");Serial.println((uint8_t)statusCodeBuffer[3]);
-      Serial.print("Slot 3: Status code: Under range: ");Serial.println((uint8_t)statusCodeBuffer[7]);
-      Serial.print("Slot 3: Status code: Over range: ");Serial.println((uint8_t)statusCodeBuffer[11]);
+      Serial.print("Config code: ");Serial.println(configCode);
+      Serial.print("Status code: Lost 24V: ");Serial.println((uint8_t)statusCodeBuffer[3]);
+      Serial.print("Status code: Under range: ");Serial.println((uint8_t)statusCodeBuffer[7]);
+      Serial.print("Status code: Over range: ");Serial.println((uint8_t)statusCodeBuffer[11]);
 
       if(configCode == 0x4000) Serial.println("Config: Channel 1 is enabled.");
       if(configCode == 0x4001) Serial.println("Config: Channels 1 - 2 are enabled.");
@@ -124,7 +159,8 @@ namespace {
       if(configCode == 0x4006) Serial.println("Config: Channels 1 - 7 are enabled.");
       if(configCode == 0x4007) Serial.println("Config: Channels 1 - 8 are enabled.");
 
-      if((statusCodeBuffer[3] & 0x03) == 2) Serial.println("Flag: Lost 24V error.");
+      if((statusCodeBuffer[3] & 0x01) ==  1) Serial.println("Flag: Module diagnostics failure.");
+      if((statusCodeBuffer[3] & 0x02) ==  2) Serial.println("Flag: Lost 24V error.");
       if((statusCodeBuffer[7] & 0x01) == 1) Serial.println("Flag: Under range error on channel 1");
       if((statusCodeBuffer[7] & 0x02) == 2) Serial.println("Flag: Under range error on channel 2");
       if((statusCodeBuffer[7] & 0x04) == 4) Serial.println("Flag: Under range error on channel 3");
@@ -134,10 +170,68 @@ namespace {
       if((statusCodeBuffer[11] & 0x04) == 4) Serial.println("Flag: Over range error on channel 3");
       if((statusCodeBuffer[11] & 0x08) == 8) Serial.println("Flag: Over range error on channel 4");
     }
-    else{
-      Serial.print("The selected slot: ");
+    else if (3 < slot && slot < 6){
+      Serial.print("Checking status codes on P1-08ADL-1 module on slot ");
       Serial.print(slot);
-      Serial.println(" is not currently supported by this command.");
+      Serial.println("...");
+
+      P1.readModuleConfig(configCodeBuffer, slot);
+      P1.readStatus(statusCodeBuffer, slot);
+
+      uint16_t configCode = (configCodeBuffer[0] << 8) | (configCodeBuffer[1]);
+
+      Serial.print("Config code: ");Serial.println(configCode);
+      Serial.print("Status code: Lost 24V: ");Serial.println((uint8_t)statusCodeBuffer[3]);
+      Serial.print("Status code: Under range: ");Serial.println((uint8_t)statusCodeBuffer[7]);
+      Serial.print("Status code: Over range: ");Serial.println((uint8_t)statusCodeBuffer[11]);
+
+      if(configCode == 0x4000) Serial.println("Config: Channel 1 is enabled.");
+      if(configCode == 0x4001) Serial.println("Config: Channels 1 - 2 are enabled.");
+      if(configCode == 0x4002) Serial.println("Config: Channels 1 - 3 are enabled.");
+      if(configCode == 0x4003) Serial.println("Config: Channels 1 - 4 are enabled.");
+      if(configCode == 0x4004) Serial.println("Config: Channels 1 - 5 are enabled.");
+      if(configCode == 0x4005) Serial.println("Config: Channels 1 - 6 are enabled.");
+      if(configCode == 0x4006) Serial.println("Config: Channels 1 - 7 are enabled.");
+      if(configCode == 0x4007) Serial.println("Config: Channels 1 - 8 are enabled.");
+
+      if((statusCodeBuffer[3] & 0x01) ==  1) Serial.println("Flag: Module diagnostics failure.");
+      if((statusCodeBuffer[3] & 0x02) ==  2) Serial.println("Flag: Lost 24V error.");
+      if((statusCodeBuffer[7] & 0x01) ==  1) Serial.println("Flag: Under range error on channel 1");
+      if((statusCodeBuffer[7] & 0x02) ==  2) Serial.println("Flag: Under range error on channel 2");
+      if((statusCodeBuffer[7] & 0x04) ==  4) Serial.println("Flag: Under range error on channel 3");
+      if((statusCodeBuffer[7] & 0x08) ==  8) Serial.println("Flag: Under range error on channel 4");
+      if((statusCodeBuffer[7] & 0x10) == 16) Serial.println("Flag: Under range error on channel 5");
+      if((statusCodeBuffer[7] & 0x20) == 32) Serial.println("Flag: Under range error on channel 6");
+      if((statusCodeBuffer[7] & 0x40) == 64) Serial.println("Flag: Under range error on channel 7");
+      if((statusCodeBuffer[7] & 0x80) ==128) Serial.println("Flag: Under range error on channel 8");
+      if((statusCodeBuffer[11] & 0x01) ==  1) Serial.println("Flag: Over range error on channel 1");
+      if((statusCodeBuffer[11] & 0x02) ==  2) Serial.println("Flag: Over range error on channel 2");
+      if((statusCodeBuffer[11] & 0x04) ==  4) Serial.println("Flag: Over range error on channel 3");
+      if((statusCodeBuffer[11] & 0x08) ==  8) Serial.println("Flag: Over range error on channel 4");
+      if((statusCodeBuffer[11] & 0x10) == 16) Serial.println("Flag: Over range error on channel 5");
+      if((statusCodeBuffer[11] & 0x20) == 32) Serial.println("Flag: Over range error on channel 6");
+      if((statusCodeBuffer[11] & 0x40) == 64) Serial.println("Flag: Over range error on channel 7");
+      if((statusCodeBuffer[11] & 0x80) ==128) Serial.println("Flag: Over range error on channel 8");
+    }
+    else if (slot == 1){
+      Serial.println("P1-15TD1 Discrete Sink Output modules do not provide any status data.");
+    }
+    else if(1 < slot && slot < 4){
+      Serial.print("Checking status codes on P1-08DAL-1 module on slot ");
+      Serial.print(slot);
+      Serial.println("...");
+
+      P1.readStatus(statusCodeBuffer, slot);
+
+      Serial.print("Status code: Lost 24V: ");Serial.println((uint8_t)statusCodeBuffer[3]);
+
+      if((statusCodeBuffer[3] & 0x02) == 2) Serial.println("Flag: Lost 24V error.");
+      if((statusCodeBuffer[3] & 0x01) == 1) Serial.println("Flag: Module diagnostics failure.");
+    }
+    else{
+      Serial.print("The selected slot (");
+      Serial.print(slot);
+      Serial.println(") is not currently supported by this command.");
     }
   }
 
@@ -224,7 +318,6 @@ namespace {
 
   void c_LogsSince(){
     uint64_t timestamp = atol(console.Arguments[1]);
-    
   }
 
   void c_StackPrints(){
@@ -242,11 +335,11 @@ namespace {
 
 namespace th_SerialConsole{
   void initialize(){
-    console.AddCommand("test", c_Test);
+    console.AddCommand("p1s", c_P1StatusCodes, "Check the status codes on the P1 modules.\np1s <slot>");
     console.AddCommand("do", c_DiscreteOutput, "Digital Output command.\nTurn a digital output on or off.\ndo <slot> <channel> <state>");
     console.AddCommand("ai", c_AnalogInput, "Analog Input command.\nRead an analog input.\nai <slot> <channel>");
+    console.AddCommand("ao", c_AnalogOutput, "Analog Output command.\nWrite an analog value to a P1 module (in mA or V).\nao <slot> <channel> <value>");
     console.AddCommand("pm", []() { P1.printModules();}, "Print out all installed P1 modules.");
-    console.AddCommand("p1s", c_P1StatusCodes, "Check the status codes on the P1 modules.\np1s <slot>");
     console.AddCommand("led", c_LED, "Change the setting on the RGB LED on the CPU.\nEach color has a min of 0 and a max of 255.\nled <R> <G> <B>");
     console.AddCommand("sdls", c_SD_ls, "List the contents of a directory on the SD card (root is \"/\").\nsdls <dir>");
     console.AddCommand("sdcat", c_SD_cat, "Dump the contents of a file from the SD card.\nsdcat <filePath>");
@@ -261,6 +354,7 @@ namespace th_SerialConsole{
     console.AddCommand("stackPrints", c_StackPrints, "Check and see how much stack RAM we have trampled over throughout the lifetime of the program.");
     console.AddCommand("ramNow", c_RamNow, "How much RAM are we using right now?");
     console.AddCommand("ramAdr", c_RamAdr, "Print the addresses of where things are in RAM.");
+    console.AddCommand("test", c_Test);
   }
 
   int8_t tick(){

@@ -200,6 +200,8 @@ var updateGraph = function(data){
   LiveGraph.render();
 }
 
-subscribeToLiveDataRequester('graph', ['secsToday'], updateGraph);
+// NOTE: Subscription is not automatic. When antother value subscribes to live data, that automatically starts graphing.
+//       The graph automatically unsubscribes when all other subscribers stop.
+//subscribeToLiveDataRequester('graph', ['secsToday'], updateGraph);
 
 /*  *****     *****     *****     ***** /LIVE GRAPH HOOKUP / REGISTRATION *****     *****     *****     *****  */

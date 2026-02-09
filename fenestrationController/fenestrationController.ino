@@ -105,12 +105,13 @@ void setup() {
     th_SerialConsole::initialize();
     th_WebServer::initialize();
 
+    // Continuous Runtime Tasks
     kernel.AddThread(th_Blink::thread);
     kernel.AddThread(th_SerialConsole::thread);
     kernel.AddThread(th_WebServer::thread);
     kernel.AddThread(th_DataLogger::thread);
 
-    //Terminal Async Task Initialization
+    // Terminal Async Task Initialization
     kernel.AddThread(MechanicalSystem::tk_StopAll::Task);
     kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Positive::Task);
     kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Negative::Task);

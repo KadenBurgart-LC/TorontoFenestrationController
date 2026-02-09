@@ -1,6 +1,6 @@
 /*  *****     *****     *****     *****  UI INTERAVTIVITY  *****     *****     *****     *****  */
 
-var rootUrl = 'http://192.168.1.177';
+var rootUrl = 'http://192.168.1.178';
 
 
 // INDIVIDUAL WIDGET BEHAVIORS
@@ -68,7 +68,13 @@ function subscribeToLiveDataRequester(subscriberKey, vals, func){
     };
   }
   else {
-    console.warn('LiveDataRequester: ${subscriberKey} attempted to subscribe, but they are already subscribed.');
+    console.warn(`LiveDataRequester: ${subscriberKey} attempted to subscribe, but they are already subscribed.`);
+  }
+
+  if(Object.keys(liveDataSubscribers).length > 0){
+    if(liveDataSubscribers['graph'] === undefined){
+      subscribeToLiveDataRequester('graph', ['secsToday'], updateGraph);
+    }
   }
 }
 
@@ -77,6 +83,12 @@ function unsubscribeFromLiveDataRequester(subscriberKey) {
     delete liveDataSubscribers[subscriberKey];
   } else {
     console.warn(`LiveDataRequester: Attempted to unsubscribe ${subscriberKey}, but no such subscriber exists.`);
+  }
+
+  if(Object.keys(liveDataSubscribers).length == 1){
+    if(liveDataSubscribers['graph'] !== undefined){
+      unsubscribeFromLiveDataRequester('graph');
+    }
   }
 }
 

@@ -18,7 +18,7 @@ namespace MechanicalSystem { namespace tk_StopAll { extern Thread Task; } }
 // Private members
 namespace {
 	uint8_t MacAddress[6] = {0xDE, 0xAD, 0xEF, 0xFE, 0xED};
-	IPAddress IP(192,168,1,177);
+	IPAddress IP(192,168,1,178);
 
 	const uint8_t LIVE_DATA_MAX_NUM_FIELDS = 15;
 	const uint8_t LIVE_DATA_JSON_KEY_BUFFER_SIZE = 250;

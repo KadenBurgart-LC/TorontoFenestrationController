@@ -48,7 +48,7 @@ namespace {
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
 
-			def.P1_Slot = 2;
+			def.P1_Slot = 4;
 			def.P1_Channel = 1;
 
 			return def;
@@ -63,7 +63,7 @@ namespace {
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
 
-			def.P1_Slot = 2;
+			def.P1_Slot = 4;
 			def.P1_Channel = 1;
 
 			return def;
@@ -78,7 +78,7 @@ namespace {
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
 
-			def.P1_Slot = 2;
+			def.P1_Slot = 4;
 			def.P1_Channel = 1;
 
 			return def;
@@ -93,7 +93,7 @@ namespace {
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
 
-			def.P1_Slot = 2;
+			def.P1_Slot = 4;
 			def.P1_Channel = 1;
 
 			return def;
@@ -108,7 +108,7 @@ namespace {
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
 
-			def.P1_Slot = 2;
+			def.P1_Slot = 4;
 			def.P1_Channel = 1;
 
 			return def;
@@ -123,7 +123,7 @@ namespace {
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
 
-			def.P1_Slot = 2;
+			def.P1_Slot = 4;
 			def.P1_Channel = 1;
 
 			return def;
@@ -138,7 +138,7 @@ namespace {
 			def.SignalUnitGain = 0.8;
 			def.SignalUnitOffset = 0;
 
-			def.P1_Slot = 2;
+			def.P1_Slot = 4;
 			def.P1_Channel = 1;
 
 			return def;
@@ -153,7 +153,7 @@ namespace {
 			def.SignalUnitGain = 0.7;
 			def.SignalUnitOffset = 0;
 
-			def.P1_Slot = 2;
+			def.P1_Slot = 4;
 			def.P1_Channel = 1;
 
 			return def;
@@ -172,7 +172,7 @@ namespace {
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
 
-			def.P1_Slot = 2;
+			def.P1_Slot = 4;
 			def.P1_Channel = 1;
 
 			return def;
@@ -187,7 +187,7 @@ namespace {
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
 
-			def.P1_Slot = 2;
+			def.P1_Slot = 4;
 			def.P1_Channel = 1;
 
 			return def;
@@ -202,7 +202,7 @@ namespace {
 			def.SignalUnitGain = 1;
 			def.SignalUnitOffset = 0;
 
-			def.P1_Slot = 2;
+			def.P1_Slot = 4;
 			def.P1_Channel = 1;
 
 			return def;
@@ -400,8 +400,17 @@ namespace HAL {
 	}
 
 	void init_P1Slots(){
-		const char P1_08ADL_2_CONFIG[] = { 0x40, 0x07 };
-		P1.configureModule(P1_08ADL_2_CONFIG, 3); //sends the config data to the analog voltage input module in slot 3
+		// Magic config numbers documented here...
+		// https://facts-engineering.github.io/modules/P1-08ADL-1/P1-08ADL-1.html
+
+		const char P1_08ADL_1_CONFIG[] = { 0x40, 0x07 }; // All channels on
+		const char P1_08ADL_2_CONFIG[] = { 0x40, 0x07 }; // All channels on
+
+		// Digital sink output modules do not have a configuration function.
+		// Analog current output modules do not have a configuration function.
+		P1.configureModule(P1_08ADL_1_CONFIG, 4); // configure analog current input module in slot 4
+		P1.configureModule(P1_08ADL_1_CONFIG, 5); // configure analog current input module in slot 5
+		P1.configureModule(P1_08ADL_2_CONFIG, 6); // configure analog voltage input module in slot 6
 	}
 
 	/* Set the colour of the RGB LED on the controller
