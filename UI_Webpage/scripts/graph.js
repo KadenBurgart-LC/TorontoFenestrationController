@@ -50,8 +50,8 @@ LiveGraph.render = function(){
       .range([0, width]);
     xAxis
       .transition()
-          .ease(d3.easeCubicOut)
-      .delay(transitionDelay)
+        .duration(transitionDelay)
+        .ease(d3.easeCubicOut)
       .attr("transform", "translate(0," + height + ")")
       .call(d3.axisBottom(xScale));
 
@@ -64,8 +64,8 @@ LiveGraph.render = function(){
       .range([height, 0]);
     pAxis
       .transition()
-          .ease(d3.easeCubicOut)
-      .delay(transitionDelay)
+        .duration(transitionDelay)
+        .ease(d3.easeCubicOut)
       .call(d3.axisLeft(pScale));
 
     // Render the deflection axis
@@ -81,8 +81,8 @@ LiveGraph.render = function(){
       .range([height, 0]);
     dAxis
       .transition()
+        .duration(transitionDelay)
         .ease(d3.easeCubicOut)
-      .delay(transitionDelay)
       .attr("transform", "translate("+width+",0)")
       .call(d3.axisRight(dScale));
 
@@ -90,28 +90,32 @@ LiveGraph.render = function(){
     const  line = d3.line().x(d => xScale(d[0])).y(d => pScale(d[1]));
     const dline = d3.line().x(d => xScale(d[0])).y(d => dScale(d[1]));
 
-    pPath.data([this.pressureData])
-        .transition()
-          .ease(d3.easeCubicOut)
-          .delay(transitionDelay)
+    // Update paths directly without creating new data bindings
+    pPath
+      .datum(this.pressureData)
+      .transition()
+        .duration(transitionDelay)
+        .ease(d3.easeCubicOut)
       .attr("d", line)
       .style("fill", "none")
       .style("stroke", "steelblue")
       .style("stroke-width", "3px");
 
-    d1Path.data([this.d1Data])
+    d1Path
+      .datum(this.d1Data)
       .transition()
+        .duration(transitionDelay)
         .ease(d3.easeCubicOut)
-        .delay(transitionDelay)
       .attr('d', dline)
       .style("fill", "none")
       .style("stroke", "#AA2222")
       .style("stroke-width", "3px");
 
-    d2Path.data([this.d2Data])
+    d2Path
+      .datum(this.d2Data)
       .transition()
+        .duration(transitionDelay)
         .ease(d3.easeCubicOut)
-        .delay(transitionDelay)
       .attr('d', dline)
       .style("fill", "none")
       .style("stroke", "#AA2222")
