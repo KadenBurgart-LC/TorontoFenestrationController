@@ -50,15 +50,28 @@ LiveGraph.render = function(){
     var xMax = d3.max(this.pressureData, d => d[0]);
     var xMin = d3.min(this.pressureData, d => d[0]);
     var xRange = xMax - xMin;
+    // Create scale that shows time relative to most recent point (0 = now, negative = past)
     var xScale = d3.scaleLinear()
+      .domain([xMin - xMax, 0])
+      .range([0, width]);
+    // Transform actual time values to relative time for display
+    var xScaleActual = d3.scaleLinear()
       .domain([xMin, xMax])
       .range([0, width]);
+    // Format tick labels as mm:ss
+    var timeFormatter = function(d) {
+      var totalSeconds = Math.abs(Math.round(d * 60));
+      var minutes = Math.floor(totalSeconds / 60);
+      var seconds = totalSeconds % 60;
+      var sign = d < 0 ? '-' : '';
+      return sign + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+    };
     xAxis
       .transition()
         .duration(transitionDelay)
         .ease(d3.easeCubicOut)
       .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(xScale));
+      .call(d3.axisBottom(xScale).tickFormat(timeFormatter));
 
     // X axis label
     xAxisLabel
@@ -118,8 +131,8 @@ LiveGraph.render = function(){
       .text("Displacement (mm)");
 
     // Render the data paths
-    const  line = d3.line().x(d => xScale(d[0])).y(d => pScale(d[1]));
-    const dline = d3.line().x(d => xScale(d[0])).y(d => dScale(d[1]));
+    const  line = d3.line().x(d => xScaleActual(d[0])).y(d => pScale(d[1]));
+    const dline = d3.line().x(d => xScaleActual(d[0])).y(d => dScale(d[1]));
 
     // Update paths directly without creating new data bindings
     pPath
