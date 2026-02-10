@@ -355,6 +355,9 @@ namespace HAL {
 
 		if(output.OutputType == HAL::AnalogOutputType::P1_08DAL_1) error = P1_08DAL_1_write_mA(output.P1_Slot, output.P1_Channel, value);
 
+		output.LastRawUnitValue = value;
+		output.LastSignalUnitValue = (value - output.SignalUnitOffset) / output.SignalUnitGain;
+
 		return error;
 	}
 
@@ -396,7 +399,7 @@ namespace HAL {
 		auto ix = AnalogOutputs.find(o);
 
 		if (ix != AnalogOutputs.end()){
-			error = false;
+			*error = false;
 			AnalogOutputDefinition& output = ix->second;
 			return getAnalogOutput_RawUnits_Last(output);
 		}
@@ -412,7 +415,7 @@ namespace HAL {
 		auto ix = AnalogOutputs.find(o);
 
 		if (ix != AnalogOutputs.end()){
-			error = false;
+			*error = false;
 			AnalogOutputDefinition& output = ix->second;
 			return getAnalogOutput_SignalUnits_Last(output);
 		}

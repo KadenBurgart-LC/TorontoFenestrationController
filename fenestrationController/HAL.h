@@ -105,6 +105,11 @@ namespace HAL {
 	bool setAnalogOutput_RawUnits(AnalogOutput o, double value); // returns false if there's an error
 	bool setAnalogOutput_SignalUnits(AnalogOutput o, double value); // returns false if there's an error
 
+	double getAnalogOutput_RawUnits_Last(AnalogOutputDefinition &output);
+	double getAnalogOutput_RawUnits_Last(AnalogOutput o, bool *error = nullptr);
+	double getAnalogOutput_SignalUnits_Last(AnalogOutputDefinition &output);
+	double getAnalogOutput_SignalUnits_Last(AnalogOutput o, bool *error = nullptr);
+
 	void init_CPU();
 	void init_Serial();
 	void init_P1Slots();

@@ -44,32 +44,29 @@ namespace {
 			return String(HAL::RTC_GetSecondsToday());
 		}
 		else if (strcmp(key, "wV1Pos") == 0){
-			success = true;
-			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::VALVE_C7_8));
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::VALVE_C7_8, &success));
+		}
+		else if (strcmp(key, "wV1TargetPos") == 0){
+			return String(HAL::getAnalogOutput_SignalUnits_Last(HAL::AnalogOutput::VALVE_C7_8, &success));
 		}
 		else if (strcmp(key, "wExample_liveShortValue") == 0){
 			success = true;
 			return (String("LSV: ") + String(millis()/100%100));
 		}
 		else if (strcmp(key, "wLowPressure") == 0){ 
-			success = true;
-			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_LOW)); 
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_LOW, &success)); 
 		}
 		else if (strcmp(key, "wMedPressure") == 0){
-			success = true;
-			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_MED));
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_MED, &success));
 		}
 		else if (strcmp(key, "wHighPressure") == 0){
-			success = true;
-			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_HIGH));
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::PRESSURE_WINDOW_HIGH, &success));
 		}
 		else if (strcmp(key, "wDisplacement1") == 0){
-			success = true;
-			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::DISPLACEMENT_1));
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::DISPLACEMENT_1, &success));
 		}
 		else if (strcmp(key, "wDisplacement2") == 0){
-			success = true;
-			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::DISPLACEMENT_2));
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::DISPLACEMENT_2, &success));
 		}
 		else if(strcmp(key, "wLastLogEntry") == 0){
 			success = true;
@@ -395,7 +392,6 @@ namespace th_WebServer{
 
 		Jarvis.On("/wRTC", routes::WidgetHandler_SmartLabelValue("wRTC"));
 
-		//wV1TargetPos  wV1Pos
 		Jarvis.On("/wV1TargetPos", routes::WidgetHandler_ValueSender("wV1TargetPos"));
 		Jarvis.On("/wV1Pos", routes::WidgetHandler_LiveShortValue("wV1Pos"));
 
