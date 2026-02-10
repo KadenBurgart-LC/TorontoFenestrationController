@@ -26,9 +26,9 @@ namespace {
 	   AutomationDirect output module-style output.
 	   [output, [slot number, channel number]] */
 	std::map<HAL::DigitalOutput, std::array<uint8_t, 2>> P1_DO_Channels = {
-		{HAL::DigitalOutput::STRUCTURAL_BLOWER_POWER, {1, 1}},
-		{HAL::DigitalOutput::LEAKAGE_BLOWER_POWER, {1, 2}},
-		{HAL::DigitalOutput::WATER_PUMP_POWER, {1, 3}}
+		{HAL::DigitalOutput::LEAKAGE_BLOWER_POWER, {1, 1}},
+		{HAL::DigitalOutput::WATER_PUMP_POWER, {1, 2}},
+		{HAL::DigitalOutput::STRUCTURAL_BLOWER_POWER, {1, 3}}
 	};
 
 	// Keep an internal memory map of what the pin number is for each Arduino style output
