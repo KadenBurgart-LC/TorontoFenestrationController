@@ -8,14 +8,46 @@ var LiveGraph = {
     xAxis = svgG.append('g'); // Adds a group for the x axis
     pAxis = svgG.append('g'); // Adds a group for the pressure axis
     dAxis = svgG.append('g'); // Adds a group for the deflection axis
-    pPath = svgG.append("path"); // Adds a path to the svg to display the pressure
-    d1Path = svgG.append('path'); // Adds a path to the svg to display the d1 data
-    d2Path = svgG.append('path'); // Adds a path to the svg to display the d2 data
 
     // Add axis labels
     xAxisLabel = svgG.append('text').attr('class', 'axis-label').style('font-size', '12px');
     pAxisLabel = svgG.append('text').attr('class', 'axis-label').style('font-size', '12px');
     dAxisLabel = svgG.append('text').attr('class', 'axis-label').style('font-size', '12px');
+
+    // Add data paths
+    pPath = svgG.append("path"); // Adds a path to the svg to display the pressure
+    d1Path = svgG.append('path'); // Adds a path to the svg to display the d1 data
+    d2Path = svgG.append('path'); // Adds a path to the svg to display the d2 data
+
+    // Add cursor elements for interactivity (after paths so they're on top)
+    cursorLine = svgG.append('line')
+      .attr('class', 'cursor-line')
+      .style('stroke', '#666')
+      .style('stroke-width', '2px')
+      .style('stroke-dasharray', '5,5')
+      .style('opacity', 0)
+      .style('pointer-events', 'none');
+
+    cursorTextBg = svgG.append('rect')
+      .attr('class', 'cursor-text-bg')
+      .style('fill', 'white')
+      .style('stroke', '#999')
+      .style('stroke-width', '1px')
+      .style('opacity', 0.95)
+      .style('display', 'none')
+      .style('pointer-events', 'none');
+
+    cursorText = svgG.append('text')
+      .attr('class', 'cursor-text')
+      .style('font-size', '11px')
+      .style('display', 'none')
+      .style('pointer-events', 'none');
+
+    mouseOverlay = svgG.append('rect')
+      .attr('class', 'mouse-overlay')
+      .style('fill', 'none')
+      .style('pointer-events', 'all')
+      .style('cursor', 'crosshair');
 
     // Initialize empty data arrays
     this.pressureData = [];
@@ -164,6 +196,112 @@ LiveGraph.render = function(){
       .style("fill", "none")
       .style("stroke", "#AA2222")
       .style("stroke-width", "3px");
+
+    // Update mouse overlay size
+    mouseOverlay
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', width)
+      .attr('height', height);
+
+    // Mouse interaction handlers (remove old handlers first)
+    var self = this;
+    mouseOverlay
+      .on('mouseenter', null)
+      .on('mouseleave', null)
+      .on('mousemove', null);
+
+    mouseOverlay
+      .on('mouseenter', function() {
+        cursorLine.style('opacity', 1);
+        cursorText.style('display', 'block');
+        cursorTextBg.style('display', 'block');
+      })
+      .on('mouseleave', function() {
+        cursorLine.style('opacity', 0);
+        cursorText.style('display', 'none');
+        cursorTextBg.style('display', 'none');
+      })
+      .on('mousemove', function(event) {
+        // Check if we have data
+        if (!self.pressureData || self.pressureData.length === 0) return;
+
+        // Use d3.mouse for older D3 versions, d3.pointer for v6+
+        var mouse = d3.pointer ? d3.pointer(event) : d3.mouse(this);
+        var mouseX = mouse[0];
+
+        // Find closest data point by x position
+        var xTime = xScaleActual.invert(mouseX);
+
+        // Binary search for closest point
+        var bisect = d3.bisector(d => d[0]).left;
+        var idx = bisect(self.pressureData, xTime);
+
+        if (idx >= self.pressureData.length) idx = self.pressureData.length - 1;
+        if (idx < 0) idx = 0;
+
+        // Check if previous point is closer
+        if (idx > 0 && Math.abs(self.pressureData[idx - 1][0] - xTime) < Math.abs(self.pressureData[idx][0] - xTime)) {
+          idx--;
+        }
+
+        var dataPoint = self.pressureData[idx];
+        var d1Point = self.d1Data[idx];
+        var d2Point = self.d2Data[idx];
+
+        if (!dataPoint || !d1Point || !d2Point) return;
+
+        var xPos = xScaleActual(dataPoint[0]);
+        var relativeTime = dataPoint[0] - xMax;
+
+        // Update cursor line
+        cursorLine
+          .attr('x1', xPos)
+          .attr('x2', xPos)
+          .attr('y1', 0)
+          .attr('y2', height);
+
+        // Format time
+        var totalSeconds = Math.abs(Math.round(relativeTime * 60));
+        var minutes = Math.floor(totalSeconds / 60);
+        var seconds = totalSeconds % 60;
+        var sign = relativeTime < 0 ? '-' : '';
+        var timeStr = sign + minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+
+        // Build text
+        var lines = [
+          'Time: ' + timeStr,
+          'Pressure: ' + dataPoint[1].toFixed(0) + ' Pa',
+          'Disp1: ' + d1Point[1].toFixed(1) + ' mm',
+          'Disp2: ' + d2Point[1].toFixed(1) + ' mm'
+        ];
+
+        // Position text (left or right of cursor depending on space)
+        var textX = xPos + 10;
+        var textAnchor = 'start';
+        if (xPos > width - 120) {
+          textX = xPos - 10;
+          textAnchor = 'end';
+        }
+
+        // Update text
+        cursorText.selectAll('tspan').remove();
+        lines.forEach(function(line, i) {
+          cursorText.append('tspan')
+            .attr('x', textX)
+            .attr('y', 15 + i * 14)
+            .attr('text-anchor', textAnchor)
+            .text(line);
+        });
+
+        // Update background box
+        var bbox = cursorText.node().getBBox();
+        cursorTextBg
+          .attr('x', bbox.x - 3)
+          .attr('y', bbox.y - 2)
+          .attr('width', bbox.width + 6)
+          .attr('height', bbox.height + 4);
+      });
   }
 
 LiveGraph.render();

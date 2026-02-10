@@ -386,7 +386,38 @@ namespace HAL {
 
 		return error;
 	}
+
+	double getAnalogOutput_RawUnits_Last(AnalogOutputDefinition &output){
+		return output.LastRawUnitValue;
+	}
+
+	double getAnalogOutput_RawUnits_Last(AnalogOutput o, bool *error){
+		if(error != nullptr) *error = true;
+		auto ix = AnalogOutputs.find(o);
+
+		if (ix != AnalogOutputs.end()){
+			error = false;
+			AnalogOutputDefinition& output = ix->second;
+			return getAnalogOutput_RawUnits_Last(output);
+		}
+		else return 0;
+	}
 	
+	double getAnalogOutput_SignalUnits_Last(AnalogOutputDefinition &output){
+		return output.LastSignalUnitValue;
+	}
+
+	double getAnalogOutput_SignalUnits_Last(AnalogOutput o, bool *error){
+		if(error != nullptr) *error = true;
+		auto ix = AnalogOutputs.find(o);
+
+		if (ix != AnalogOutputs.end()){
+			error = false;
+			AnalogOutputDefinition& output = ix->second;
+			return getAnalogOutput_SignalUnits_Last(output);
+		}
+		else return 0;
+	}
 
 	void init_CPU(){
 		while (!P1.init());
