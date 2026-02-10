@@ -40,7 +40,12 @@ namespace {
 			return String(millis());
 		}
 		else if (strcmp(key, "secsToday") == 0){
+			success = true;
 			return String(HAL::RTC_GetSecondsToday());
+		}
+		else if (strcmp(key, "wV1Pos") == 0){
+			success = true;
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::VALVE_C7_8));
 		}
 		else if (strcmp(key, "wExample_liveShortValue") == 0){
 			success = true;
@@ -173,6 +178,13 @@ namespace {
 			float setTo = lib_Util::StringToFloat(val, fltConvertWorked);
 
 			if(fltConvertWorked) success = MechanicalSystem::SetTargetPressure(setTo);
+		}
+		if(strcmp(key, "wV1TargetPos") == 0){
+			float setTo = lib_Util::StringToFloat(val, fltConvertWorked);
+
+			Serial.print("Setting valve to ");Serial.print(setTo);Serial.println("%");
+
+			if(fltConvertWorked) success = HAL::setAnalogOutput_SignalUnits(HAL::AnalogOutput::VALVE_C7_8, setTo);
 		}
 		else if(strcmp(key, "wWaterPump") == 0) {
 			if(val[0] == '1') {
@@ -382,7 +394,11 @@ namespace th_WebServer{
 		Jarvis.On("/liveDataPacketRequest", routes::P_liveDataPacketRequest);
 
 		Jarvis.On("/wRTC", routes::WidgetHandler_SmartLabelValue("wRTC"));
-		
+
+		//wV1TargetPos  wV1Pos
+		Jarvis.On("/wV1TargetPos", routes::WidgetHandler_ValueSender("wV1TargetPos"));
+		Jarvis.On("/wV1Pos", routes::WidgetHandler_LiveShortValue("wV1Pos"));
+
 		Jarvis.On("/wTargetPressure", routes::WidgetHandler_ValueSender("wTargetPressure"));
 		Jarvis.On("/wLowPressure", routes::WidgetHandler_LiveShortValue("wLowPressure"));
 		Jarvis.On("/wMedPressure", routes::WidgetHandler_LiveShortValue("wMedPressure"));

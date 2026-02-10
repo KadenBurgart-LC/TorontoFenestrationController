@@ -108,7 +108,7 @@ namespace {
       (0 < channel && channel < 9)
       ){
       if(4 <= value && value <= 20){
-        outputCounts = (value - 4) * 4095 / 16; // Convert from mA to 12 bit (4095) counts 
+        outputCounts = (value - 4.0) * 4095 / 16; // Convert from mA to 12 bit (4095) counts 
 
         Serial.print("Attempting to write");
         Serial.print(value);

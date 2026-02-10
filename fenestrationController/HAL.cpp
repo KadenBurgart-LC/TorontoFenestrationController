@@ -157,6 +157,21 @@ namespace {
 			def.P1_Channel = 1;
 
 			return def;
+		})()},
+		{HAL::AnalogInput::VALVE_C7_8, ([](){
+			HAL::AnalogInputDefinition def;
+
+			def.InputType = HAL::AnalogInputType::P1_08ADL_1;
+
+			def.RawUnits = "mA";
+			def.SignalUnits = "%";
+			def.SignalUnitGain = 100.0 / 16.0;
+			def.SignalUnitOffset = -25;
+
+			def.P1_Slot = 4;
+			def.P1_Channel = 1;
+
+			return def;
 		})()}
 	};
 
@@ -168,11 +183,11 @@ namespace {
 			def.OutputType = HAL::AnalogOutputType::P1_08DAL_1;
 
 			def.RawUnits = "mA";
-			def.SignalUnits = "Pa";
-			def.SignalUnitGain = 1;
-			def.SignalUnitOffset = 0;
+			def.SignalUnits = "%";
+			def.SignalUnitGain = 0.16;
+			def.SignalUnitOffset = 4;
 
-			def.P1_Slot = 4;
+			def.P1_Slot = 2;
 			def.P1_Channel = 1;
 
 			return def;
@@ -219,7 +234,8 @@ namespace {
 		if(slot < 1) return false;
 		if(channel < 0) return false;
 
-		int outputCounts = ( (mA - 4.0) / 20.0 ) * 4095.0; // The P1.writeAnalog function takes a 12-bit (0-4095) "count" number
+		int outputCounts = (mA - 4.0) * 4095 / 16; // The P1.writeAnalog function takes a 12-bit (0-4095) "count" number
+		Serial.print("counts ");Serial.println(outputCounts);
 
 		P1.writeAnalog(outputCounts, slot, channel);
 
@@ -334,7 +350,7 @@ namespace HAL {
 		else return 0;
 	}
 
-	bool setAnalogOutput_RawUnits(AnalogOutputDefinition output, double value){
+	bool setAnalogOutput_RawUnits(AnalogOutputDefinition& output, double value){
 		bool error = true;
 
 		if(output.OutputType == HAL::AnalogOutputType::P1_08DAL_1) error = P1_08DAL_1_write_mA(output.P1_Slot, output.P1_Channel, value);
@@ -362,9 +378,10 @@ namespace HAL {
 		if(ix != AnalogOutputs.end()){
 			AnalogOutputDefinition& output = ix->second;
 
-			double rawValue = (value - output.SignalUnitOffset) / output.SignalUnitGain;
+			double rawValue = value * output.SignalUnitGain + output.SignalUnitOffset;
+			Serial.print("rawValue ");Serial.println(rawValue);
 
-			error = setAnalogOutput_RawUnits(output, value);
+			error = setAnalogOutput_RawUnits(output, rawValue);
 		}
 
 		return error;
