@@ -68,6 +68,9 @@ namespace {
 		else if (strcmp(key, "wDisplacement2") == 0){
 			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::DISPLACEMENT_2, &success));
 		}
+		else if (strcmp(key, "wTmpAmb") == 0){
+			return String(HAL::getAnalogInput_SignalUnits(HAL::AnalogInput::TEMP_AMB, &success));
+		}
 		else if(strcmp(key, "wLastLogEntry") == 0){
 			success = true;
 			return th_DataLogger::getLastLogLine();
@@ -402,11 +405,12 @@ namespace th_WebServer{
 		Jarvis.On("/wDisplacement1", routes::WidgetHandler_LiveShortValue("wDisplacement1"));
 		Jarvis.On("/wDisplacement2", routes::WidgetHandler_LiveShortValue("wDisplacement2"));
 		Jarvis.On("/wLastLogEntry", routes::WidgetHandler_LiveShortValue("wLastLogEntry"));
+		Jarvis.On("/wTmpAmb", routes::WidgetHandler_SmartShortValue("wTmpAmb"));
 
 		Jarvis.On("/wHpBlower", routes::WidgetHandler_Toggle("wHpBlower"));
 		Jarvis.On("/wLpBlower", routes::WidgetHandler_Toggle("wLpBlower"));
 		Jarvis.On("/wWaterPump", routes::WidgetHandler_Toggle("wWaterPump"));
-		Jarvis.On("/wHPvalvesDirection", routes::WidgetHandler_Toggle_Delayed("wHPvalvesDirection", th_test::thread, th_test::thread));
+		Jarvis.On("/wHPvalvesDirection", routes::WidgetHandler_Toggle_Delayed("wHPvalvesDirection", MechanicalSystem::tk_SetHighPressure_Positive::Task, MechanicalSystem::tk_SetHighPressure_Negative::Task));
 		Jarvis.On("/wLPvalvesDirection", routes::WidgetHandler_Toggle_Delayed("wLPvalvesDirection", MechanicalSystem::tk_SetLowPressure_Positive::Task, MechanicalSystem::tk_SetLowPressure_Negative::Task));
 
 		Jarvis.On("/wExample_smartShortValue", routes::WidgetHandler_SmartShortValue("wExample_smartShortValue"));

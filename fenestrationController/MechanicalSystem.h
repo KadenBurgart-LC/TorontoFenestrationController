@@ -37,8 +37,14 @@ namespace MechanicalSystem {
 		extern Thread Task;
 		int8_t Tick();
 	}
-	namespace tk_SetHighPressure_Positive { }
-	namespace tk_SetHighPressure_Negative { }
+	namespace tk_SetHighPressure_Positive { 
+		extern Thread Task;
+		int8_t Tick();
+	}
+	namespace tk_SetHighPressure_Negative { 
+		extern Thread Task;
+		int8_t Tick();
+	}
 
 }
 

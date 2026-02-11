@@ -12,6 +12,9 @@ var loaderReadyMode = function(loaderImg){
 	loaderImg.attr('src', './assets/Ready.png')
 }
 
+// Widget-specific post-AJAX callbacks
+// Register callbacks in viewModel_index.js using: buttonWidgetCallbacks_ajaxReceived['widgetId'] = function(data) { ... }
+var buttonWidgetCallbacks_ajaxReceived = {};
 
 var buttonClickHandler = function(buttonDiv){
 	var w = buttonDiv.closest('.widget');
@@ -30,8 +33,13 @@ var buttonClickHandler = function(buttonDiv){
 		.fail(function(){
 			textField.val("ERROR");
 		})
-		.always(function(){
+		.always(function(data){
 			loaderReadyMode(loaderImg);
+
+			// Execute widget-specific callback if registered
+			if(buttonWidgetCallbacks_ajaxReceived[id]){
+				buttonWidgetCallbacks_ajaxReceived[id](data);
+			}
 		});
 }
 $('.buttonDiv').on('click', function(){ buttonClickHandler($(this)); });

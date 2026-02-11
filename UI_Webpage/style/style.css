@@ -54,6 +54,9 @@ div {
 
   font-size: 1.2em;
 }
+.widget .dataField > input:focus {
+  outline: none;
+}
 .widget .label {
   padding: 9px 0 0 5px;
 }

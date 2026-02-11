@@ -110,7 +110,7 @@ LiveGraph.render = function(){
       .attr("text-anchor", "middle")
       .attr("x", width / 2)
       .attr("y", height + margin.bottom)
-      .text("Time (minutes)");
+      .text("Time (min:sec)");
 
     // Render the pressure axis
     var pMax = d3.max(this.pressureData, d => d[1]);

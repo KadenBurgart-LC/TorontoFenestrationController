@@ -15,16 +15,28 @@ $('.send>img').click(function(){
 
     refreshButtonLoadingMode(refreshImage);
 
-    $.post(rootUrl + '/' + id, { 'value': textField.val() })    
+    $.post(rootUrl + '/' + id, { 'value': textField.val() })
       .done(function(data){
         textField.val(data);
-      })  
+      })
       .fail(function(){
         textField.val("ERROR");
       })
       .always(function(){
         refreshButtonReadyMode(refreshImage);
       });
+  });
+
+// Trigger send button on Enter key press
+$('.value-sender').find('input').on('keypress', function(e){
+    if(e.which === 13){ // Enter key
+      $(this).closest('.widget').find('.send>img').trigger('click');
+    }
+  });
+
+// Auto-select text when clicking on input field
+$('.value-sender').find('input').on('click focus', function(){
+    $(this).select();
   });
 
 

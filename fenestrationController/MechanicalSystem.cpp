@@ -50,6 +50,10 @@ namespace MechanicalSystem {
 			else if (threadState == 1){
 				HAL::set_C0_1_RgbLed(8,0,0);
 
+				HAL::setDigitalOutput(HAL::DigitalOutput::STRUCTURAL_BLOWER_POWER, false);
+				HAL::setDigitalOutput(HAL::DigitalOutput::LEAKAGE_BLOWER_POWER, false);
+				HAL::setDigitalOutput(HAL::DigitalOutput::WATER_PUMP_POWER, false);
+
 				// Wait for 1 second
 				if ((unsigned long)(millis() - startTime) > delayThreshold) threadState++;
 			}
@@ -127,6 +131,80 @@ namespace MechanicalSystem {
 			}
 			else if (threadState == 2){
 				_lowPressureValveConfiguration = 0;  // We can now garuntee that we are in the positive configuration
+
+				HAL::set_C0_1_RgbLed_ReadySignal();
+				threadState = 0;
+				return 1; // Tell OSBos that the task is now finished
+			}
+
+			return returnCode;
+		}
+	}
+
+	namespace tk_SetHighPressure_Positive {
+		Thread Task = NewTerminalTask(Tick, 500);
+
+		int8_t Tick(){
+			static uint8_t threadState = 0;
+			static unsigned long startTime = 0;
+			static unsigned long delayThreshold = 2000;
+
+			int8_t returnCode = 0;
+
+			if (threadState == 0){
+				startTime = millis();
+
+				HAL::set_C0_1_RgbLed(8,0,8);
+
+				_highPressureValveConfiguration = -1; // The state is uncertain once this task begins
+
+				threadState++;
+			}
+			else if (threadState == 1){
+				HAL::set_C0_1_RgbLed(8,0,8);
+
+				// Wait for 1 second
+				if ((unsigned long)(millis() - startTime) > delayThreshold) threadState++;
+			}
+			else if (threadState == 2){
+				_highPressureValveConfiguration = 1;  // We can now garuntee that we are in the positive configuration
+
+				HAL::set_C0_1_RgbLed_ReadySignal();
+				threadState = 0;
+				return 1; // Tell OSBos that the task is now finished
+			}
+
+			return returnCode;
+		}
+	}
+
+	namespace tk_SetHighPressure_Negative {
+		Thread Task = NewTerminalTask(Tick, 500);
+
+		int8_t Tick(){
+			static uint8_t threadState = 0;
+			static unsigned long startTime = 0;
+			static unsigned long delayThreshold = 2000;
+
+			int8_t returnCode = 0;
+
+			if (threadState == 0){
+				startTime = millis();
+
+				HAL::set_C0_1_RgbLed(8,0,8);
+
+				_highPressureValveConfiguration = -1; // The state is uncertain once this task begins
+
+				threadState++;
+			}
+			else if (threadState == 1){
+				HAL::set_C0_1_RgbLed(8,0,8);
+
+				// Wait for 1 second
+				if ((unsigned long)(millis() - startTime) > delayThreshold) threadState++;
+			}
+			else if (threadState == 2){
+				_highPressureValveConfiguration = 0;  // We can now garuntee that we are in the negative configuration
 
 				HAL::set_C0_1_RgbLed_ReadySignal();
 				threadState = 0;

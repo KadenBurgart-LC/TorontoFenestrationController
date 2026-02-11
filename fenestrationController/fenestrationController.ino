@@ -1,4 +1,6 @@
 /*  fenestrationController.ino      (S0900.A.D.A.C0.A)
+
+    NOTE: Look to the project's README.md file first.
     
     This program is designed to run on the AutomationDirect P1AM-200 industrial controller.
     This program is intended to be uploaded to the P1AM-200 using the Arduino IDE, using the 
@@ -6,7 +8,7 @@
 
     This program controls the automatic valves, relays, sensors, and other peripherals that 
     operate the fenestration wall in Oakville.
-    The program should also expose a user interface over ethernet, accessed through a browser.
+    The program should be controlled using a web application.
 
     This program references valves and relays based on the names given in the component list 
     S0900.A.D.1 and the system diagrams in S0900.A.D.2.
@@ -16,39 +18,13 @@
     card that lives in the P1AM-200 module. I'll make a server interface to upload and download
     files to/from the SD card for over-the-air updates to the web app.
 
-    Planning...
-      What core processes do I need to run the wall?
+    TODO...
+      - I need a control (PID) loop for pressure control
 
-      1) I need a process to read sensor values into some internal RAM data structure.
-      2) I need a process to digest that RAM data structure into some form of output stream that goes to subscibers.
-      2.1) I need a process to subscribe to the output stream and store the data in long-term memory, probably on an SD card.
-      2.2) I need a process to subscribe to the output stream and send the data over serial. (maybe use the physical switch on the controller to disable the serial stream to save CPU time)
-      NOTE: Do all that data stuff in a single thread right now. I want to avoid dynamic memory objects for the moment. We can do a whole queue/buffer subscription thing later maybe.
-      No, not this: 5) I need a process to subscribe to the output stream and publish the data over a web API? No.
-      5) I need a process to handle incoming ethernet requests and return what is needed, which may include the web app on first load, or more commonly a JSON object with a live data packet.
-      6) I need a process to act as a high-level state machine that orchestrates everything else.
-      7) I need a process to handle running through my outputs and making sure that they match their associated 'RAM commander variables'.
-      8) I need a control (PID?) loop for the structural test pressure.
-      9) I need s control (PID?) loop for the leakage pressure.
+    Initial draft: 2025-11-10 - Kaden Burgart
 
-      Process 1) What do I need in my data structure?
-        - Active readings from the pressure sensors.
-        - Active readings from the linear transducers.
-        - The states of my outputs.
-        - The variables in my PID loop.
-
-      Files?
-
-    2025-11-10 - Kaden Burgart
-    v0 - DRAFT
-      Started the first draft of the program. We still don't have the valves and other components;
-      just the controller, so the code is somewhat loose.
-      Right now I just need to test the digital output module P1-15TD1 and the analog input
-      modules P1-08ADL-1 and P1-08ADL-2.
-      Should also test the ethernet module P1AM-ETH and the peripherals on the P1AM-200 including:
         -Real-Time Clock            PCF8563_RTC library
         -microSD card               SD library
-        -SPI Flash
         -Externak 2k-bit EEPROM     AT24MAC_EEPROM library
         -Watchdog timer             
         -Toggle Switch              digitalRead()
@@ -115,6 +91,8 @@ void setup() {
     kernel.AddThread(MechanicalSystem::tk_StopAll::Task);
     kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Positive::Task);
     kernel.AddThread(MechanicalSystem::tk_SetLowPressure_Negative::Task);
+    kernel.AddThread(MechanicalSystem::tk_SetHighPressure_Positive::Task);
+    kernel.AddThread(MechanicalSystem::tk_SetHighPressure_Negative::Task);
     kernel.AddThread(th_test::thread);                      // Used for the example button widget
 
     th_DataLogger::writeToLog("The system is booting up...");
