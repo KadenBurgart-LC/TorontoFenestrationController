@@ -1,0 +1,8 @@
+# Data Logger Settings
+# Edit these values as needed
+
+# The web server endpoint to poll for log data
+ENDPOINT_URL=http://192.168.1.178/wLastLogEntry
+
+# How often to poll the endpoint (in seconds)
+POLL_INTERVAL=1.0

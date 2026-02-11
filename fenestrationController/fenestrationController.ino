@@ -1,6 +1,8 @@
 /*  fenestrationController.ino      (S0900.A.D.A.C0.A)
 
     NOTE: Look to the project's README.md file first.
+
+    Versioning and update notes on GitHub: https://github.com/KadenBurgart-LC/TorontoFenestrationController
     
     This program is designed to run on the AutomationDirect P1AM-200 industrial controller.
     This program is intended to be uploaded to the P1AM-200 using the Arduino IDE, using the 
@@ -47,8 +49,7 @@
 
     2025-11-27 - Kaden
     v0.1 - DRAFT
-      Moving versioning and update notes to GitHub.
-      github.com/KadenBurgart-LC/TorontoFenestrationController
+      
 */
 
 #include <OSBos.h>                      // The custom library that acts as our simple kernel https://github.com/actuvon/OSBos
